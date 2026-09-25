@@ -1,0 +1,8 @@
+{
+  "name": "@happydrive/design-tokens",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { "./tokens.css": "./dist/tokens.css", ".": "./dist/tokens.ts" },
+  "scripts": { "build": "node scripts/build.mjs" }
+}

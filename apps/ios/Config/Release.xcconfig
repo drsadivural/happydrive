@@ -1,0 +1,5 @@
+#include "Shared.xcconfig"
+
+API_BASE_URL = https:/$()/api.happydrive.jp/v1
+HD_APNS_ENVIRONMENT = production
+INFOPLIST_FILE = HappyDrive/Supporting/Info.plist

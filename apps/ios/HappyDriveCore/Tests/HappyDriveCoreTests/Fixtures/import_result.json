@@ -1,0 +1,1 @@
+{"dryRun": true, "created": [], "valid": 2, "duplicates": [{"row": 3, "address": "横浜市中区山下町1-2-3", "existingStopId": "0a4b1a70-1111-4c1e-9a53-0f4b8e2d1a01"}, {"row": 4, "address": "横浜市西区1-1", "duplicateOfRow": 2}], "errors": [{"row": 5, "message": "住所が空欄です"}]}

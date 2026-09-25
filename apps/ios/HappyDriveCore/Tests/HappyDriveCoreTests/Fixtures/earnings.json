@@ -1,0 +1,5 @@
+[
+  {"id": "e1a2b3c4-0000-4c1e-9a53-0f4b8e2d1a71", "assignmentId": "5a6b7c8d-0000-4c1e-9a53-0f4b8e2d1a61", "jobTitle": "買い物付き添い", "organizationName": "地域サポート事業者", "contractType": "contractor", "amountYen": 900, "state": "payable", "scheduledPayoutDate": "2026-10-15", "workDate": "2026-09-26", "breakdown": [{"type": "base", "amountYen": 700}, {"type": "expenses", "amountYen": 200, "note": "交通費"}]},
+  {"assignmentId": "5a6b7c8d-1111-4c1e-9a53-0f4b8e2d1a62", "amountYen": 600, "state": "paid", "paidAt": "2026-09-15T01:00:00Z"},
+  {"assignmentId": "5a6b7c8d-2222-4c1e-9a53-0f4b8e2d1a63", "amountYen": -300, "state": "reversed"}
+]

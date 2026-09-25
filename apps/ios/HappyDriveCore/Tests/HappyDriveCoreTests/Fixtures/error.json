@@ -1,0 +1,1 @@
+{"code": "capacity_full", "message": "この案件は満員になりました。空き待ちに登録できます。", "requestId": "req-123", "details": {"remainingCapacity": 0, "waitlistAvailable": true}}

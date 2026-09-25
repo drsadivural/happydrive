@@ -1,0 +1,2 @@
+[{"id": "n0000000-0000-4c1e-9a53-0f4b8e2d1a91", "type": "assignment.approved", "title": "検収が完了しました", "body": "買い物付き添いの報告が承認されました", "entityType": "assignment", "entityId": "5a6b7c8d-0000-4c1e-9a53-0f4b8e2d1a61", "createdAt": "2026-09-26T08:00:00Z"},
+ {"id": "n1111111-0000-4c1e-9a53-0f4b8e2d1a92", "type": "system", "title": "お知らせ", "body": "メンテナンスのお知らせ", "readAt": "2026-09-26T09:00:00Z", "createdAt": "2026-09-25T08:00:00Z"}]

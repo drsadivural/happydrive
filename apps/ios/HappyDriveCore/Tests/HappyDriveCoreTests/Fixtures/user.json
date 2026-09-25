@@ -1,0 +1,23 @@
+{
+  "id": "6f1c2a4e-2b7d-4c1e-9a53-0f4b8e2d1a10",
+  "displayName": "山田 太郎",
+  "verificationStatus": "verified",
+  "skills": ["life_support_training"],
+  "skillDetails": [
+    {"code": "life_support_training", "name": "生活支援講習", "status": "verified", "source": "training", "validUntil": "2027-09-30"},
+    {"code": "caregiver_basic", "name": "介護職員初任者研修", "status": "pending", "source": "document"}
+  ],
+  "roles": ["worker"],
+  "phoneMasked": "090-****-5678",
+  "termsAccepted": true,
+  "profile": {"legalName": "山田 太郎", "legalNameKana": "ヤマダ タロウ", "birthDate": "1990-04-01", "postalCode": "231-0023", "address": "神奈川県横浜市中区山下町1-2-3"},
+  "vehicle": {"type": "kei_van", "plateNumber": "横浜 480 あ 12-34", "blackPlateRegistered": true, "cargoCapacityKg": 350},
+  "bankAccount": {"bankCode": "0001", "branchCode": "123", "accountType": "ordinary", "accountNumberLast4": "4567", "holderNameKana": "ヤマダ タロウ"},
+  "preferences": {"useLocationForMatching": true, "useHistoryForMatching": false, "preferredCategories": ["life_support", "community_info"], "maxDistanceKm": 10, "notifyNewJobs": true, "notifyMessages": true, "showRatingToOrganizations": true},
+  "organizations": [],
+  "ratingAverage": 4.8,
+  "ratingCount": 24,
+  "completedJobCount": 24,
+  "suspended": false,
+  "onboardingSteps": {"terms": true, "profile": true, "vehicle": true, "bankAccount": true, "verification": true}
+}

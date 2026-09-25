@@ -1,0 +1,4 @@
+{"id": "life-support-basic", "title": "生活支援の基本", "category": "life_support", "summary": "安全な付き添いの基本", "durationMinutes": 30, "grantsSkill": "life_support_training", "grantsSkillName": "生活支援講習", "completed": false,
+ "lessons": [{"title": "あいさつと本人確認", "body": "最初に名乗り、依頼者本人であることを確認します。"}],
+ "questions": [{"id": "q1", "question": "依頼者の自宅内を撮影してよいのはどんな場合？", "choices": ["いつでも", "依頼者と発注者の同意があり業務上必要な場合のみ", "撮影は不要"]}],
+ "passScore": 1}

@@ -1,0 +1,39 @@
+# Local development stack. Not a production deployment (see docs/RUNBOOK.md).
+name: happydrive
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: happydrive
+      POSTGRES_PASSWORD: happydrive
+      POSTGRES_DB: happydrive
+    ports: ["5433:5432"]
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U happydrive"]
+      interval: 5s
+  redis:
+    image: redis:7-alpine
+    ports: ["6380:6379"]
+  api:
+    build: { context: ../.., dockerfile: services/api/Dockerfile }
+    environment:
+      NODE_ENV: development
+      PORT: "8080"
+      DATABASE_URL: postgresql://happydrive:happydrive@db:5432/happydrive
+      REDIS_URL: redis://redis:6379
+      MIGRATE_ON_START: "true"
+      PUBLIC_BASE_URL: http://localhost:8088
+      LOCAL_STORAGE_DIR: /tmp/objects
+    ports: ["8088:8080"]
+    depends_on: { db: { condition: service_healthy }, redis: { condition: service_started } }
+  worker:
+    build: { context: ../.., dockerfile: services/api/Dockerfile }
+    command: ["node", "dist/worker.js"]
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://happydrive:happydrive@db:5432/happydrive
+      LOCAL_STORAGE_DIR: /tmp/objects
+    depends_on: { api: { condition: service_started } }
+volumes:
+  dbdata: {}

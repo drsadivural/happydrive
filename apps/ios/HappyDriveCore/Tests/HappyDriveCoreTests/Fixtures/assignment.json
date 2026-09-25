@@ -1,0 +1,25 @@
+{
+  "id": "5a6b7c8d-0000-4c1e-9a53-0f4b8e2d1a61",
+  "jobId": "4e5f6a7b-0000-4c1e-9a53-0f4b8e2d1a31",
+  "workerId": "6f1c2a4e-2b7d-4c1e-9a53-0f4b8e2d1a10",
+  "workerDisplayName": "山田 太郎",
+  "state": "working",
+  "acceptedAmountYen": 900,
+  "acceptedAt": "2026-09-26T03:00:00Z",
+  "termsSnapshot": {"amountYen": 900, "cancellationPolicy": {"freeCancelHoursBefore": 24}, "flags": [true, null]},
+  "job": {"title": "買い物付き添い", "category": "shopping_assist", "contractType": "contractor", "startsAt": "2026-09-26T06:00:00Z", "endsAt": "2026-09-26T06:30:00Z", "organizationId": "1b2c3d4e-0000-4c1e-9a53-0f4b8e2d1a41", "organizationName": "地域サポート事業者", "areaLabel": "横浜市中区", "address": "横浜市中区山下町10", "location": {"latitude": 35.4437, "longitude": 139.6503}, "checkInRadiusMeters": 200, "meetingPointNote": "店舗入口", "minPhotoCount": 1},
+  "steps": [
+    {"index": 0, "title": "本人確認・あいさつ", "completed": true, "completedAt": "2026-09-26T06:02:00Z"},
+    {"index": 1, "title": "依頼内容を確認", "completed": true},
+    {"index": 2, "title": "買い物に付き添う", "completed": true},
+    {"index": 3, "title": "集合場所に戻る", "completed": false},
+    {"index": 4, "title": "完了報告を送る", "requiresPhoto": true, "completed": false}
+  ],
+  "checkedInAt": "2026-09-26T05:58:00Z",
+  "workStartedAt": "2026-09-26T06:02:00Z",
+  "evidence": [{"id": "9d1e6b2a-bbbb-4c1e-9a53-0f4b8e2d1a09", "purpose": "work_photo", "status": "verified", "contentType": "image/jpeg", "byteSize": 123456, "createdAt": "2026-09-26T06:10:00Z"}],
+  "timeline": [{"eventType": "accepted", "at": "2026-09-26T03:00:00Z", "actorRole": "worker"}, {"eventType": "checked_in", "at": "2026-09-26T05:58:00Z", "actorRole": "worker"}],
+  "earning": {"state": "estimated", "amountYen": 900, "scheduledPayoutDate": "2026-10-15"},
+  "myRatingSubmitted": false,
+  "lateCancellation": false
+}

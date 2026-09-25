@@ -1,0 +1,200 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		039F31E886390170CC6D7406 = {isa = PBXBuildFile; fileRef = 7714842F28CB6736F04552E3; };
+		050B212511AE7FA2AC866236 = {isa = PBXBuildFile; fileRef = BC0A1E2475C260F1CD507903; };
+		07D4789C749EF7E9DFAFB357 = {isa = PBXBuildFile; fileRef = 1EC5A455721CA5F045467D55; };
+		0FEBA6D3E29857AE238C3587 = {isa = PBXBuildFile; fileRef = E0DB61AC39DAFDC9FEFE03EE; };
+		12D198E4E079F758CF495033 = {isa = PBXBuildFile; fileRef = 7B4AD20FFA33A92E2759688F; };
+		152316C8B7677C01E6B0EA78 = {isa = PBXBuildFile; fileRef = 226CAD008A2F57252CB9F74C; };
+		15C44E44B65CAF046BF2B290 = {isa = PBXBuildFile; fileRef = A8DC107F2321ABFAF538EA71; };
+		1A1B73EEA6F4D1BF8883EE17 = {isa = PBXBuildFile; fileRef = 1D70B0126CC2712D010F392C; };
+		1F32225C72F6EEA8190573B5 = {isa = PBXBuildFile; fileRef = 7BCB16F54DCD03A14E665408; };
+		2119ECD2D41C3D154F73AF9A = {isa = PBXBuildFile; fileRef = 4DC9F543E39C8E2F7637C0F0; };
+		24FD82A8A3419C8D9F67EF84 = {isa = PBXBuildFile; fileRef = B8364FE0089C3351EC5B32B5; };
+		2553B15ED996FB458041FE6F = {isa = PBXBuildFile; fileRef = 60BCF3F279AA47B7AE65649D; };
+		294D30456192F4A39525218B = {isa = PBXBuildFile; fileRef = B6090A9043C0C987D9B8BC00; };
+		29F4003BDE84BD38031F7B15 = {isa = PBXBuildFile; productRef = 510C57A19C2E2CC95879912E; };
+		3CD0240AF702EF32180DFCBE = {isa = PBXBuildFile; fileRef = 88A8D288D3AE180F6CD25375; };
+		4BB2D64A07A7332BD6A1D2E4 = {isa = PBXBuildFile; fileRef = 7B55206EDC3B66A30574E940; };
+		5B4DFB77ED44F713F60711C7 = {isa = PBXBuildFile; fileRef = AD54DD634AF600A1EA96E06B; };
+		606B2FA74A6C3403C80DBBA6 = {isa = PBXBuildFile; fileRef = 6B32ADFC3C6C150E7D7F167F; };
+		661A9B6DDB3579E2EFB1A3B4 = {isa = PBXBuildFile; fileRef = FE928798F5FB4717D4C728E4; };
+		6BD4FFAACF88767401331B5E = {isa = PBXBuildFile; fileRef = 51569B5BC4A5FADF5B835308; };
+		6C57D1313AA436F8D8A23CBB = {isa = PBXBuildFile; fileRef = DD541F1DE7FC02F897372CD5; };
+		75220CA73FE8123FE44E80CE = {isa = PBXBuildFile; fileRef = 063AF09DBD1374322966F00B; };
+		768120BC66FF717C4C790026 = {isa = PBXBuildFile; fileRef = 4679FAADA51F4812CC8D5326; };
+		7C096BCD7327247A6DC36A41 = {isa = PBXBuildFile; fileRef = 3AD61D6F332ED68D0924FB3F; };
+		7FD7203FDD1861EE8DAD4621 = {isa = PBXBuildFile; fileRef = F8C7510E059E3F40037CCB1C; };
+		8C392C11ADC5B9A5AFB78673 = {isa = PBXBuildFile; fileRef = CCE502C825D93DF4732002BE; };
+		936362F0247DBF1BF7BD20EB = {isa = PBXBuildFile; fileRef = EDDD411DC4CCFA851818D6B6; };
+		9517C772C4369A7BBC40EA25 = {isa = PBXBuildFile; fileRef = 82C460D247F8E3463C0761B5; };
+		9FC3B8D9504996635EED2225 = {isa = PBXBuildFile; fileRef = 13C4F714B9A59C4273E7A32E; };
+		A1CBC3761B254DF1A3B77675 = {isa = PBXBuildFile; fileRef = 97AF20C17427A7634A5217FC; };
+		A352A58A24A7F7B9105B10E9 = {isa = PBXBuildFile; fileRef = 6DA1E8B0208B10665ADBBF9E; };
+		A4493F7D4EE1FEB8CE6F239C = {isa = PBXBuildFile; fileRef = 96417D46F32108A6D6AB7218; };
+		A4FB9249BC258A567C3CD508 = {isa = PBXBuildFile; fileRef = 1FE2D47B4B7DB189095EDBB3; };
+		AF781C4BC35ED6196F89288E = {isa = PBXBuildFile; fileRef = A76E333EDC3D6573B0FAA90E; };
+		B7BDE7123B2A11E251EF16E1 = {isa = PBXBuildFile; fileRef = 796ABE6887FD9D0671C9F499; };
+		CAA31AB673CA67FAF4C0B500 = {isa = PBXBuildFile; fileRef = 1500995831041DE434FBD558; };
+		D1458990671DD5F827F4AC65 = {isa = PBXBuildFile; fileRef = EADAE4C5C786EEBE7527E9E9; };
+		D2710BE82853250C499A424E = {isa = PBXBuildFile; fileRef = 3EEAA84727B31B2DE4645E81; };
+		D4D218ECD2D4634DB9EBF4A0 = {isa = PBXBuildFile; fileRef = 300189DAF0A83BF24F36209E; };
+		D5A7DE7113F22D02B52F67B8 = {isa = PBXBuildFile; fileRef = 8F7263D557DC16CA409E4B61; };
+		DBB32B54E96710495DB92DC1 = {isa = PBXBuildFile; fileRef = 69438781CC15DFF250B6E15A; };
+		E17A04F65A60D61917E648D8 = {isa = PBXBuildFile; fileRef = C650E510ED37EAFC1C12FE40; };
+		E4E7A5046D3D8DCAA5E6311E = {isa = PBXBuildFile; fileRef = 131E26E52C163E68A4E8C206; };
+		E4FD0732FF3211EAEAC6AF31 = {isa = PBXBuildFile; fileRef = FF5DAAD2FA26A0B137830D62; };
+		E68239A70BE68955FB8980D4 = {isa = PBXBuildFile; fileRef = 84CDB10E36EEFDF07F94A704; };
+		F76E4E71E35CA750B55AC22C = {isa = PBXBuildFile; fileRef = F0B9289CA0CF9D30DB8E5F80; };
+		FD08365629F2FDA9760D7637 = {isa = PBXBuildFile; fileRef = 51D0BFDA46079E9F6BA9919E; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E6442374623EB70D42F0DA59 = {isa = PBXContainerItemProxy; containerPortal = 591E547634363047B3AFFBC5; proxyType = 1; remoteGlobalIDString = B8ECD5F160A9E53E210A0A5E; remoteInfo = HappyDrive; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		00D2D5AC78A613D5FFD6EB4F = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HappyDrive.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		063AF09DBD1374322966F00B = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryViewModel.swift; sourceTree = "<group>"; };
+		131E26E52C163E68A4E8C206 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteMapView.swift; sourceTree = "<group>"; };
+		13C4F714B9A59C4273E7A32E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignaturePad.swift; sourceTree = "<group>"; };
+		13EC064C5729AF6A24E5F5CE = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1500995831041DE434FBD558 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddStopView.swift; sourceTree = "<group>"; };
+		1911DD300B90C4190D3ED441 = {isa = PBXFileReference; lastKnownFileType = folder; path = HappyDriveCore; sourceTree = SOURCE_ROOT; };
+		1D70B0126CC2712D010F392C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubmitReportView.swift; sourceTree = "<group>"; };
+		1EC5A455721CA5F045467D55 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
+		1FE2D47B4B7DB189095EDBB3 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		226CAD008A2F57252CB9F74C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		300189DAF0A83BF24F36209E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSharingController.swift; sourceTree = "<group>"; };
+		3280A7A68CEC44EEB52F8181 = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		3AD61D6F332ED68D0924FB3F = {isa = PBXFileReference; lastKnownFileType = file; path = "NotoSansJP-VF.ttf"; sourceTree = "<group>"; };
+		3EEAA84727B31B2DE4645E81 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningViews.swift; sourceTree = "<group>"; };
+		4679FAADA51F4812CC8D5326 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		4DC9F543E39C8E2F7637C0F0 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopDetailView.swift; sourceTree = "<group>"; };
+		4DF2DE23E3AFA44B1B0A22A1 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Debug.plist"; sourceTree = "<group>"; };
+		51569B5BC4A5FADF5B835308 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
+		51D0BFDA46079E9F6BA9919E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemServices.swift; sourceTree = "<group>"; };
+		60BCF3F279AA47B7AE65649D = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
+		69438781CC15DFF250B6E15A = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		6B32ADFC3C6C150E7D7F167F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRouter.swift; sourceTree = "<group>"; };
+		6DA1E8B0208B10665ADBBF9E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentWorkflowView.swift; sourceTree = "<group>"; };
+		7714842F28CB6736F04552E3 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HappyDriveApp.swift; sourceTree = "<group>"; };
+		78BC6A6F439B56941B677FD5 = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		796ABE6887FD9D0671C9F499 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		7B4AD20FFA33A92E2759688F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateViews.swift; sourceTree = "<group>"; };
+		7B55206EDC3B66A30574E940 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7BCB16F54DCD03A14E665408 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
+		82C460D247F8E3463C0761B5 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlowView.swift; sourceTree = "<group>"; };
+		84CDB10E36EEFDF07F94A704 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageView.swift; sourceTree = "<group>"; };
+		874B38AF95D88EB1F0983919 = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		88A8D288D3AE180F6CD25375 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaServices.swift; sourceTree = "<group>"; };
+		8F7263D557DC16CA409E4B61 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRCaptureView.swift; sourceTree = "<group>"; };
+		96417D46F32108A6D6AB7218 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowView.swift; sourceTree = "<group>"; };
+		97AF20C17427A7634A5217FC = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		A333A31BC9FBEDB8F872F9FA = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HappyDrive.entitlements; sourceTree = "<group>"; };
+		A76E333EDC3D6573B0FAA90E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViews.swift; sourceTree = "<group>"; };
+		A8DC107F2321ABFAF538EA71 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HappyDriveUITests.swift; sourceTree = "<group>"; };
+		A95520E097A89862266E4571 = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		AD54DD634AF600A1EA96E06B = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		B6090A9043C0C987D9B8BC00 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobSearchView.swift; sourceTree = "<group>"; };
+		B8364FE0089C3351EC5B32B5 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobDetailView.swift; sourceTree = "<group>"; };
+		C43EE89E2265FE6CF5996C9E = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HappyDriveUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C650E510ED37EAFC1C12FE40 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoAttachments.swift; sourceTree = "<group>"; };
+		CCE502C825D93DF4732002BE = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcceptConfirmationSheet.swift; sourceTree = "<group>"; };
+		CE7B17E3569D1C484AFDF797 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DD541F1DE7FC02F897372CD5 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDTokens.swift; sourceTree = "<group>"; };
+		E0DB61AC39DAFDC9FEFE03EE = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportView.swift; sourceTree = "<group>"; };
+		EADAE4C5C786EEBE7527E9E9 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryView.swift; sourceTree = "<group>"; };
+		EDDD411DC4CCFA851818D6B6 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		F0B9289CA0CF9D30DB8E5F80 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptimizeSheet.swift; sourceTree = "<group>"; };
+		F8C7510E059E3F40037CCB1C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		FE928798F5FB4717D4C728E4 = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		FF5DAAD2FA26A0B137830D62 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVImportView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		929B4F3ADEE074A2048A5C9B = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		BB33686D42DB52E6DE14D89D = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (29F4003BDE84BD38031F7B15, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		02AB67F8EA8D6BF0B28AC563 = {isa = PBXGroup; children = (A8DC107F2321ABFAF538EA71, ); path = HappyDriveUITests; sourceTree = "<group>"; };
+		2C48ED5978EC5F9CAC5895FB = {isa = PBXGroup; children = (44591BACFA8731837613FE5F, 8D08FF7934D17B247AEA213D, 7DA6DEB9D2F38FA0FDE1CC19, D4AAF4B2DCB3A2F40F8B3104, DDEBFA481EF21B30989B4AFD, 57B38A60BDF3687FE4FD3220, CF3BEAFA1D810252407738F9, ); path = HappyDrive; sourceTree = "<group>"; };
+		44591BACFA8731837613FE5F = {isa = PBXGroup; children = (226CAD008A2F57252CB9F74C, 4679FAADA51F4812CC8D5326, 6B32ADFC3C6C150E7D7F167F, 7714842F28CB6736F04552E3, 300189DAF0A83BF24F36209E, 796ABE6887FD9D0671C9F499, 1EC5A455721CA5F045467D55, ); path = App; sourceTree = "<group>"; };
+		44F31378CBA7A90EF5921547 = {isa = PBXGroup; children = (6DA1E8B0208B10665ADBBF9E, 1FE2D47B4B7DB189095EDBB3, 1D70B0126CC2712D010F392C, ); path = Workflow; sourceTree = "<group>"; };
+		4599C0F21D98BEFCB65088AB = {isa = PBXGroup; children = (1911DD300B90C4190D3ED441, ); name = Packages; sourceTree = "<group>"; };
+		57B38A60BDF3687FE4FD3220 = {isa = PBXGroup; children = (7B55206EDC3B66A30574E940, BC0A1E2475C260F1CD507903, 97AF20C17427A7634A5217FC, FE928798F5FB4717D4C728E4, D6E0A02FA8E1DAFC5AA50B30, ); path = Resources; sourceTree = "<group>"; };
+		7DA6DEB9D2F38FA0FDE1CC19 = {isa = PBXGroup; children = (8F0E4630AECD89F52D4C983A, CAC8BEF6867FD8D96198AC79, 84269761834C6B3F3C1C14F7, DA780560180752A282F62EEC, DF74984B7FEF4D5A061B3F9F, 8BE4AE9BFD8EB28AB1EAF94D, F2D74C93A99C2CA25CF8A520, 44F31378CBA7A90EF5921547, ); path = Features; sourceTree = "<group>"; };
+		84269761834C6B3F3C1C14F7 = {isa = PBXGroup; children = (CCE502C825D93DF4732002BE, B8364FE0089C3351EC5B32B5, B6090A9043C0C987D9B8BC00, ); path = Jobs; sourceTree = "<group>"; };
+		88427A1B1B4BBADDE600D482 = {isa = PBXGroup; children = (A95520E097A89862266E4571, 874B38AF95D88EB1F0983919, 3280A7A68CEC44EEB52F8181, ); path = Config; sourceTree = "<group>"; };
+		8BE4AE9BFD8EB28AB1EAF94D = {isa = PBXGroup; children = (96417D46F32108A6D6AB7218, 82C460D247F8E3463C0761B5, ); path = Onboarding; sourceTree = "<group>"; };
+		8D08FF7934D17B247AEA213D = {isa = PBXGroup; children = (EDDD411DC4CCFA851818D6B6, DD541F1DE7FC02F897372CD5, 7B4AD20FFA33A92E2759688F, F8C7510E059E3F40037CCB1C, ); path = DesignSystem; sourceTree = "<group>"; };
+		8F0E4630AECD89F52D4C983A = {isa = PBXGroup; children = (1500995831041DE434FBD558, FF5DAAD2FA26A0B137830D62, E0DB61AC39DAFDC9FEFE03EE, EADAE4C5C786EEBE7527E9E9, 063AF09DBD1374322966F00B, 8F7263D557DC16CA409E4B61, F0B9289CA0CF9D30DB8E5F80, 131E26E52C163E68A4E8C206, 4DC9F543E39C8E2F7637C0F0, ); path = Delivery; sourceTree = "<group>"; };
+		C863DA5204F95EC573510473 = {isa = PBXGroup; children = (00D2D5AC78A613D5FFD6EB4F, C43EE89E2265FE6CF5996C9E, ); name = Products; sourceTree = "<group>"; };
+		CAC8BEF6867FD8D96198AC79 = {isa = PBXGroup; children = (AD54DD634AF600A1EA96E06B, ); path = Home; sourceTree = "<group>"; };
+		CF3BEAFA1D810252407738F9 = {isa = PBXGroup; children = (A333A31BC9FBEDB8F872F9FA, 4DF2DE23E3AFA44B1B0A22A1, CE7B17E3569D1C484AFDF797, ); path = Supporting; sourceTree = "<group>"; };
+		D4AAF4B2DCB3A2F40F8B3104 = {isa = PBXGroup; children = (51569B5BC4A5FADF5B835308, 69438781CC15DFF250B6E15A, 88A8D288D3AE180F6CD25375, 51D0BFDA46079E9F6BA9919E, ); path = Platform; sourceTree = "<group>"; };
+		D6E0A02FA8E1DAFC5AA50B30 = {isa = PBXGroup; children = (3AD61D6F332ED68D0924FB3F, 60BCF3F279AA47B7AE65649D, ); path = Fonts; sourceTree = "<group>"; };
+		DA780560180752A282F62EEC = {isa = PBXGroup; children = (3EEAA84727B31B2DE4645E81, ); path = Learning; sourceTree = "<group>"; };
+		DDEBFA481EF21B30989B4AFD = {isa = PBXGroup; children = (7BCB16F54DCD03A14E665408, ); path = "Preview Content"; sourceTree = "<group>"; };
+		DF74984B7FEF4D5A061B3F9F = {isa = PBXGroup; children = (A76E333EDC3D6573B0FAA90E, 84CDB10E36EEFDF07F94A704, ); path = MyPage; sourceTree = "<group>"; };
+		ECAC025C821625377FF8A023 = {isa = PBXGroup; children = (78BC6A6F439B56941B677FD5, 2C48ED5978EC5F9CAC5895FB, 02AB67F8EA8D6BF0B28AC563, 88427A1B1B4BBADDE600D482, 4599C0F21D98BEFCB65088AB, C863DA5204F95EC573510473, ); sourceTree = "<group>"; };
+		F2D74C93A99C2CA25CF8A520 = {isa = PBXGroup; children = (C650E510ED37EAFC1C12FE40, 13C4F714B9A59C4273E7A32E, ); path = Shared; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		ACB3EA73EC1B51B4527A2AE4 = {isa = PBXNativeTarget; buildConfigurationList = 92EB79E705C3F3F008F2526C; buildPhases = (497C8016E9C79330D8D86E68, 929B4F3ADEE074A2048A5C9B, B28252ECF9E387918ED61780, ); buildRules = ( ); dependencies = (8BDE93B2447E97D38EEFCECB, ); name = HappyDriveUITests; productName = HappyDriveUITests; productReference = C43EE89E2265FE6CF5996C9E; productType = "com.apple.product-type.bundle.ui-testing"; };
+		B8ECD5F160A9E53E210A0A5E = {isa = PBXNativeTarget; buildConfigurationList = C57B8E19E49BC7C33EC0693D; buildPhases = (E3270F6F9CA8B971B50AD880, BB33686D42DB52E6DE14D89D, 9558662E3E69AE860271A4F4, ); buildRules = ( ); dependencies = ( ); name = HappyDrive; packageProductDependencies = (510C57A19C2E2CC95879912E, ); productName = HappyDrive; productReference = 00D2D5AC78A613D5FFD6EB4F; productType = "com.apple.product-type.application"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		591E547634363047B3AFFBC5 = {isa = PBXProject; attributes = { BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1600; LastUpgradeCheck = 1600; TargetAttributes = { B8ECD5F160A9E53E210A0A5E = { CreatedOnToolsVersion = 16.0; }; ACB3EA73EC1B51B4527A2AE4 = { CreatedOnToolsVersion = 16.0; TestTargetID = B8ECD5F160A9E53E210A0A5E; }; }; }; buildConfigurationList = 887D4B5F61EA6AAAF609F3AC; compatibilityVersion = "Xcode 14.0"; developmentRegion = ja; hasScannedForEncodings = 0; knownRegions = (ja, Base, ); mainGroup = ECAC025C821625377FF8A023; productRefGroup = C863DA5204F95EC573510473; projectDirPath = ""; projectRoot = ""; targets = (B8ECD5F160A9E53E210A0A5E, ACB3EA73EC1B51B4527A2AE4, ); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9558662E3E69AE860271A4F4 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (4BB2D64A07A7332BD6A1D2E4, 050B212511AE7FA2AC866236, A1CBC3761B254DF1A3B77675, 661A9B6DDB3579E2EFB1A3B4, 7C096BCD7327247A6DC36A41, 2553B15ED996FB458041FE6F, ); runOnlyForDeploymentPostprocessing = 0; };
+		B28252ECF9E387918ED61780 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		497C8016E9C79330D8D86E68 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (15C44E44B65CAF046BF2B290, ); runOnlyForDeploymentPostprocessing = 0; };
+		E3270F6F9CA8B971B50AD880 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (152316C8B7677C01E6B0EA78, 768120BC66FF717C4C790026, 606B2FA74A6C3403C80DBBA6, 039F31E886390170CC6D7406, D4D218ECD2D4634DB9EBF4A0, B7BDE7123B2A11E251EF16E1, 07D4789C749EF7E9DFAFB357, 936362F0247DBF1BF7BD20EB, 6C57D1313AA436F8D8A23CBB, 12D198E4E079F758CF495033, 7FD7203FDD1861EE8DAD4621, CAA31AB673CA67FAF4C0B500, E4FD0732FF3211EAEAC6AF31, 0FEBA6D3E29857AE238C3587, D1458990671DD5F827F4AC65, 75220CA73FE8123FE44E80CE, D5A7DE7113F22D02B52F67B8, F76E4E71E35CA750B55AC22C, E4E7A5046D3D8DCAA5E6311E, 2119ECD2D41C3D154F73AF9A, 5B4DFB77ED44F713F60711C7, 8C392C11ADC5B9A5AFB78673, 24FD82A8A3419C8D9F67EF84, 294D30456192F4A39525218B, D2710BE82853250C499A424E, AF781C4BC35ED6196F89288E, E68239A70BE68955FB8980D4, A4493F7D4EE1FEB8CE6F239C, 9517C772C4369A7BBC40EA25, E17A04F65A60D61917E648D8, 9FC3B8D9504996635EED2225, A352A58A24A7F7B9105B10E9, A4FB9249BC258A567C3CD508, 1A1B73EEA6F4D1BF8883EE17, 6BD4FFAACF88767401331B5E, DBB32B54E96710495DB92DC1, 3CD0240AF702EF32180DFCBE, FD08365629F2FDA9760D7637, 1F32225C72F6EEA8190573B5, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8BDE93B2447E97D38EEFCECB = {isa = PBXTargetDependency; target = B8ECD5F160A9E53E210A0A5E; targetProxy = E6442374623EB70D42F0DA59; };
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		BC0A1E2475C260F1CD507903 = {isa = PBXVariantGroup; children = (13EC064C5729AF6A24E5F5CE, ); name = InfoPlist.strings; sourceTree = "<group>"; };
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		1F97C39796F77FB5BF7A22FF = {isa = XCBuildConfiguration; buildSettings = { CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = jp.happydrive.driver.uitests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = HappyDrive; }; name = Release; };
+		3CF0ABAEC11D74F7C143CA50 = {isa = XCBuildConfiguration; buildSettings = { CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = jp.happydrive.driver.uitests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = HappyDrive; }; name = Debug; };
+		7087FCF1AD3F987A6F30C332 = {isa = XCBuildConfiguration; baseConfigurationReference = 874B38AF95D88EB1F0983919; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; DEVELOPMENT_ASSET_PATHS = "\"HappyDrive/Preview Content\""; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = NO; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", ); PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Release; };
+		A1FEF218C4C57CE118AD5A8A = {isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_STRICT_OBJC_MSGSEND = YES; ENABLE_TESTABILITY = YES; ENABLE_USER_SCRIPT_SANDBOXING = YES; GCC_NO_COMMON_BLOCKS = YES; GCC_OPTIMIZATION_LEVEL = 0; IPHONEOS_DEPLOYMENT_TARGET = 17.0; LOCALIZATION_PREFERS_STRING_CATALOGS = YES; ONLY_ACTIVE_ARCH = YES; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_VERSION = 5.0; }; name = Debug; };
+		D49EF4AC7029FD1A8C1140E0 = {isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_STRICT_OBJC_MSGSEND = YES; ENABLE_USER_SCRIPT_SANDBOXING = YES; GCC_NO_COMMON_BLOCKS = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; LOCALIZATION_PREFERS_STRING_CATALOGS = YES; SDKROOT = iphoneos; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_VERSION = 5.0; VALIDATE_PRODUCT = YES; }; name = Release; };
+		F81D34D9EA971A5EDC4B315B = {isa = XCBuildConfiguration; baseConfigurationReference = A95520E097A89862266E4571; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; DEVELOPMENT_ASSET_PATHS = "\"HappyDrive/Preview Content\""; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = NO; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", ); PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Debug; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		887D4B5F61EA6AAAF609F3AC = {isa = XCConfigurationList; buildConfigurations = (A1FEF218C4C57CE118AD5A8A, D49EF4AC7029FD1A8C1140E0, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		92EB79E705C3F3F008F2526C = {isa = XCConfigurationList; buildConfigurations = (3CF0ABAEC11D74F7C143CA50, 1F97C39796F77FB5BF7A22FF, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		C57B8E19E49BC7C33EC0693D = {isa = XCConfigurationList; buildConfigurations = (F81D34D9EA971A5EDC4B315B, 7087FCF1AD3F987A6F30C332, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		510C57A19C2E2CC95879912E = {isa = XCSwiftPackageProductDependency; productName = HappyDriveCore; };
+/* End XCSwiftPackageProductDependency section */
+
+	};
+	rootObject = 591E547634363047B3AFFBC5;
+}

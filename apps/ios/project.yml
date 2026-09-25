@@ -1,0 +1,80 @@
+# XcodeGen 定義（https://github.com/yonaskolb/XcodeGen）
+# コミット済みの HappyDrive.xcodeproj は scripts/gen_xcodeproj.py で生成しており、XcodeGen なしで開ける。
+# XcodeGen を使う場合: `cd apps/ios && xcodegen generate`（先に scripts/gen_xcodeproj.py を 1 回実行して Info-Debug.plist を作ること）
+name: HappyDrive
+options:
+  bundleIdPrefix: jp.happydrive
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: ja
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+packages:
+  HappyDriveCore:
+    path: HappyDriveCore
+configFiles:
+  Debug: Config/Debug.xcconfig
+  Release: Config/Release.xcconfig
+targets:
+  HappyDrive:
+    type: application
+    platform: iOS
+    sources:
+      - path: HappyDrive
+        excludes:
+          - "Supporting/Info.plist"
+          - "Supporting/Info-Debug.plist"
+          - "Supporting/HappyDrive.entitlements"
+    configFiles:
+      Debug: Config/Debug.xcconfig
+      Release: Config/Release.xcconfig
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        DEVELOPMENT_ASSET_PATHS: "\"HappyDrive/Preview Content\""
+        ENABLE_PREVIEWS: YES
+        GENERATE_INFOPLIST_FILE: NO
+        SWIFT_EMIT_LOC_STRINGS: YES
+        # INFOPLIST_FILE / PRODUCT_BUNDLE_IDENTIFIER / CODE_SIGN_ENTITLEMENTS / API_BASE_URL は xcconfig で指定
+    dependencies:
+      - package: HappyDriveCore
+  HappyDriveUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: HappyDriveUITests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: jp.happydrive.driver.uitests
+        TEST_TARGET_NAME: HappyDrive
+    dependencies:
+      - target: HappyDrive
+schemes:
+  HappyDrive:
+    build:
+      targets:
+        HappyDrive: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - HappyDriveUITests
+      environmentVariables:
+        - variable: HD_UITEST_API
+          value: http://localhost:8080/v1
+          isEnabled: false
+        - variable: HD_UITEST_PHONE
+          value: ""
+          isEnabled: false
+        - variable: HD_UITEST_OTP
+          value: ""
+          isEnabled: false
+    archive:
+      config: Release

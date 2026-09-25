@@ -1,0 +1,185 @@
+openapi: 3.1.0
+info:
+  title: HappyDrive API
+  version: 1.0.0
+  description: 日本語iOS・企業ポータル共通契約。全書込に監査イベントを記録する。
+servers:
+  - url: https://api.happydrive.jp/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Identity
+  - name: Delivery
+  - name: Jobs
+  - name: Earnings
+  - name: Organization
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getMe
+      responses:
+        '200':
+          description: 利用者情報
+          content: {application/json: {schema: {$ref: '#/components/schemas/User'}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+    delete:
+      tags: [Identity]
+      operationId: requestAccountDeletion
+      description: 削除要求を登録し、復元・保持例外を説明して確定する。
+      responses:
+        '202': {description: 削除要求受理}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /delivery/stops:
+    get:
+      tags: [Delivery]
+      operationId: listStops
+      parameters:
+        - {name: date, in: query, required: true, schema: {type: string, format: date}}
+      responses:
+        '200': {description: 停止地点, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/Stop'}}}}}
+    post:
+      tags: [Delivery]
+      operationId: addStop
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/NewStop'}}}}
+      responses:
+        '201': {description: 登録, content: {application/json: {schema: {$ref: '#/components/schemas/Stop'}}}}
+        '422': {$ref: '#/components/responses/Validation'}
+  /delivery/routes/optimize:
+    post:
+      tags: [Delivery]
+      operationId: optimizeRoute
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [date, stopIds], properties: {date: {type: string, format: date}, stopIds: {type: array, minItems: 2, items: {type: string, format: uuid}}, startLocation: {$ref: '#/components/schemas/Point'}, endLocation: {$ref: '#/components/schemas/Point'}}}}}}
+      responses:
+        '200': {description: 制約付き推奨ルート, content: {application/json: {schema: {$ref: '#/components/schemas/Route'}}}}
+        '422': {$ref: '#/components/responses/Validation'}
+  /delivery/stops/{stopId}/events:
+    post:
+      tags: [Delivery]
+      operationId: recordStopEvent
+      parameters: [{$ref: '#/components/parameters/StopId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [eventType], properties: {eventType: {type: string, enum: [arrived, delivered, failed, deferred]}, failureReason: {type: string}, evidenceIds: {type: array, items: {type: string, format: uuid}}}}}}}
+      responses:
+        '200': {description: 更新済み配送先, content: {application/json: {schema: {$ref: '#/components/schemas/Stop'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /jobs:
+    get:
+      tags: [Jobs]
+      operationId: searchJobs
+      parameters:
+        - {name: latitude, in: query, schema: {type: number, minimum: -90, maximum: 90}}
+        - {name: longitude, in: query, schema: {type: number, minimum: -180, maximum: 180}}
+        - {name: category, in: query, schema: {type: string}}
+        - {name: date, in: query, schema: {type: string, format: date}}
+        - {name: cursor, in: query, schema: {type: string}}
+      responses:
+        '200': {description: 公開案件, content: {application/json: {schema: {type: object, required: [items], properties: {items: {type: array, items: {$ref: '#/components/schemas/Job'}}, nextCursor: {type: string}}}}}}
+  /jobs/{jobId}:
+    get:
+      tags: [Jobs]
+      operationId: getJob
+      parameters: [{$ref: '#/components/parameters/JobId'}]
+      responses:
+        '200': {description: 案件詳細, content: {application/json: {schema: {$ref: '#/components/schemas/Job'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /jobs/{jobId}/accept:
+    post:
+      tags: [Jobs]
+      operationId: acceptJob
+      description: 同一トランザクションで資格と残枠を検査。Idempotency-Key必須。
+      parameters: [{$ref: '#/components/parameters/JobId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '201': {description: 受諾確定, content: {application/json: {schema: {$ref: '#/components/schemas/Assignment'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /assignments/{assignmentId}/events:
+    post:
+      tags: [Jobs]
+      operationId: advanceAssignment
+      parameters: [{$ref: '#/components/parameters/AssignmentId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [eventType], properties: {eventType: {type: string, enum: [traveling, checked_in, working, submitted, cancelled, safety_alert]}, evidenceIds: {type: array, items: {type: string, format: uuid}}, note: {type: string, maxLength: 2000}, location: {$ref: '#/components/schemas/Point'}}}}}}
+      responses:
+        '200': {description: 更新済み割当, content: {application/json: {schema: {$ref: '#/components/schemas/Assignment'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /assignments/{assignmentId}/review:
+    post:
+      tags: [Organization]
+      operationId: reviewAssignment
+      parameters: [{$ref: '#/components/parameters/AssignmentId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [decision], properties: {decision: {type: string, enum: [approved, needs_revision, disputed]}, reason: {type: string, maxLength: 1000}}}}}}
+      responses:
+        '200': {description: 検収状態, content: {application/json: {schema: {$ref: '#/components/schemas/Assignment'}}}}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /evidence/uploads:
+    post:
+      tags: [Jobs]
+      operationId: createEvidenceUpload
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [assignmentId, contentType, byteSize, sha256], properties: {assignmentId: {type: string, format: uuid}, contentType: {type: string, enum: [image/jpeg, image/png]}, byteSize: {type: integer, minimum: 1, maximum: 15000000}, sha256: {type: string, pattern: '^[a-f0-9]{64}$'}}}}}}
+      responses:
+        '201': {description: 短命アップロードURL, content: {application/json: {schema: {type: object, required: [evidenceId, uploadUrl, expiresAt], properties: {evidenceId: {type: string, format: uuid}, uploadUrl: {type: string, format: uri}, expiresAt: {type: string, format: date-time}}}}}}
+  /earnings:
+    get:
+      tags: [Earnings]
+      operationId: getEarnings
+      responses:
+        '200': {description: 報酬台帳, content: {application/json: {schema: {type: array, items: {type: object, required: [assignmentId, amountYen, state], properties: {assignmentId: {type: string, format: uuid}, amountYen: {type: integer}, state: {type: string, enum: [estimated, pending, payable, paid, failed, reversed]}}}}}}}
+  /organizations/{organizationId}/jobs:
+    post:
+      tags: [Organization]
+      operationId: createJob
+      parameters:
+        - {name: organizationId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/NewJob'}}}}
+      responses:
+        '201': {description: 下書き, content: {application/json: {schema: {$ref: '#/components/schemas/Job'}}}}
+        '403': {$ref: '#/components/responses/Forbidden'}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    JobId: {name: jobId, in: path, required: true, schema: {type: string, format: uuid}}
+    StopId: {name: stopId, in: path, required: true, schema: {type: string, format: uuid}}
+    AssignmentId: {name: assignmentId, in: path, required: true, schema: {type: string, format: uuid}}
+    IdempotencyKey: {name: Idempotency-Key, in: header, required: true, schema: {type: string, minLength: 16, maxLength: 128}}
+  responses:
+    Unauthorized: {description: 認証が必要}
+    Forbidden: {description: 権限がない}
+    NotFound: {description: 見つからない}
+    Conflict: {description: 状態・残枠・重複要求の競合}
+    Validation: {description: 入力または業務制約に違反}
+  schemas:
+    Point:
+      type: object
+      required: [latitude, longitude]
+      properties: {latitude: {type: number, minimum: -90, maximum: 90}, longitude: {type: number, minimum: -180, maximum: 180}}
+    User:
+      type: object
+      required: [id, displayName, verificationStatus]
+      properties: {id: {type: string, format: uuid}, displayName: {type: string}, verificationStatus: {type: string, enum: [pending, verified, rejected]}, skills: {type: array, items: {type: string}}}
+    NewStop:
+      type: object
+      required: [address, scheduledDate]
+      properties: {address: {type: string, minLength: 4}, scheduledDate: {type: string, format: date}, timeWindowStart: {type: string, format: date-time}, timeWindowEnd: {type: string, format: date-time}, note: {type: string, maxLength: 2000}}
+    Stop:
+      allOf:
+        - {$ref: '#/components/schemas/NewStop'}
+        - {type: object, required: [id, status], properties: {id: {type: string, format: uuid}, status: {type: string, enum: [draft, ready, en_route, arrived, delivered, failed, deferred]}}}
+    Route:
+      type: object
+      required: [orderedStopIds, estimatedMinutes, feasible]
+      properties: {orderedStopIds: {type: array, items: {type: string, format: uuid}}, estimatedMinutes: {type: integer, minimum: 0}, feasible: {type: boolean}, warnings: {type: array, items: {type: string}}}
+    NewJob:
+      type: object
+      required: [title, category, contractType, startsAt, endsAt, amountYen, capacity, address, description, cancellationPolicy]
+      properties: {title: {type: string, minLength: 4}, category: {type: string}, contractType: {type: string, enum: [employment, contractor]}, startsAt: {type: string, format: date-time}, endsAt: {type: string, format: date-time}, amountYen: {type: integer, minimum: 1}, capacity: {type: integer, minimum: 1}, address: {type: string}, description: {type: string}, requiredSkills: {type: array, items: {type: string}}, cancellationPolicy: {type: string}}
+    Job:
+      allOf:
+        - {$ref: '#/components/schemas/NewJob'}
+        - {type: object, required: [id, organizationId, status, remainingCapacity], properties: {id: {type: string, format: uuid}, organizationId: {type: string, format: uuid}, status: {type: string, enum: [draft, pending_review, published, filled, expired, cancelled]}, remainingCapacity: {type: integer, minimum: 0}, matchReasons: {type: array, items: {type: string}}}}
+    Assignment:
+      type: object
+      required: [id, jobId, workerId, state]
+      properties: {id: {type: string, format: uuid}, jobId: {type: string, format: uuid}, workerId: {type: string, format: uuid}, state: {type: string, enum: [accepted, traveling, checked_in, working, submitted, approved, payable, paid, cancelled, disputed, needs_revision]}, acceptedAmountYen: {type: integer, minimum: 1}}

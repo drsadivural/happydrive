@@ -1,0 +1,2 @@
+[{"id": "p0000000-0000-4c1e-9a53-0f4b8e2d1a81", "amountYen": 20000, "status": "paid", "scheduledDate": "2026-09-15", "paidAt": "2026-09-15T01:00:00Z", "createdAt": "2026-09-10T00:00:00Z", "attemptCount": 1},
+ {"id": "p1111111-0000-4c1e-9a53-0f4b8e2d1a82", "amountYen": 10450, "status": "failed", "failureReason": "口座名義が一致しません", "createdAt": "2026-09-20T00:00:00Z"}]

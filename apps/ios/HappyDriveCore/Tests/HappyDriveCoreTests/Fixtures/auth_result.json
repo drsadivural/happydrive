@@ -1,0 +1,5 @@
+{
+  "tokens": {"accessToken": "access-token-abcdefghijklmnopqrstuvwxyz", "refreshToken": "refresh-token-abcdefghijklmnopqrstuvwxyz", "accessTokenExpiresAt": "2026-09-26T06:15:00Z", "refreshTokenExpiresAt": "2026-10-26T06:00:00.000Z"},
+  "user": {"id": "6f1c2a4e-2b7d-4c1e-9a53-0f4b8e2d1a10", "displayName": "", "verificationStatus": "unsubmitted", "termsAccepted": false, "onboardingSteps": {"terms": false, "profile": false, "vehicle": false, "bankAccount": false, "verification": false}},
+  "isNewUser": true
+}

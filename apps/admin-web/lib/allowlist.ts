@@ -1,0 +1,40 @@
+/**
+ * 運営Web の BFF が中継してよい API。運営画面で使うものだけを列挙する（企業・ドライバー向けの変更系は含めない）。
+ */
+import type { AllowRule } from '@happydrive/web-ui/bff/allowlist';
+
+export const ADMIN_API_RULES: readonly AllowRule[] = [
+  { methods: ['GET'], path: '/me' },
+  { methods: ['GET'], path: '/skills/catalog' },
+  { methods: ['GET'], path: '/admin/users' },
+  { methods: ['GET'], path: '/admin/users/{userId}' },
+  { methods: ['POST'], path: '/admin/users/{userId}/verification' },
+  { methods: ['POST'], path: '/admin/users/{userId}/suspension' },
+  { methods: ['POST'], path: '/admin/users/{userId}/skills/{skillCode}' },
+  { methods: ['GET'], path: '/admin/organizations' },
+  { methods: ['GET'], path: '/admin/organizations/{organizationId}' },
+  { methods: ['POST'], path: '/admin/organizations/{organizationId}/review' },
+  { methods: ['GET'], path: '/admin/jobs' },
+  { methods: ['GET'], path: '/admin/jobs/{jobId}' },
+  { methods: ['POST'], path: '/admin/jobs/{jobId}/review' },
+  { methods: ['GET'], path: '/admin/assignments' },
+  { methods: ['GET'], path: '/assignments/{assignmentId}' },
+  { methods: ['POST'], path: '/admin/assignments/{assignmentId}/resolve-dispute' },
+  { methods: ['POST'], path: '/admin/assignments/{assignmentId}/reverse' },
+  { methods: ['POST'], path: '/admin/assignments/{assignmentId}/reassign' },
+  { methods: ['GET'], path: '/admin/reports' },
+  { methods: ['POST'], path: '/admin/reports/{reportId}/resolve' },
+  { methods: ['GET'], path: '/admin/support-tickets' },
+  { methods: ['POST'], path: '/admin/support-tickets/{ticketId}/answer' },
+  { methods: ['GET'], path: '/admin/payouts' },
+  { methods: ['POST'], path: '/admin/payouts/batches' },
+  { methods: ['POST'], path: '/admin/payouts/{payoutId}/retry' },
+  { methods: ['GET'], path: '/admin/reconciliation' },
+  { methods: ['GET'], path: '/admin/audit-events' },
+  { methods: ['GET'], path: '/admin/audit-events/verify' },
+  { methods: ['GET'], path: '/admin/analytics' },
+  { methods: ['GET', 'PUT'], path: '/admin/matching/config' },
+  { methods: ['GET'], path: '/admin/matching/audit' },
+  { methods: ['GET'], path: '/admin/deletion-requests' },
+  { methods: ['GET'], path: '/evidence/{evidenceId}/url' },
+];

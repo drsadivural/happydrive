@@ -1,0 +1,32 @@
+{
+  "name": "@happydrive/admin-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@happydrive/contracts": "workspace:*",
+    "@happydrive/design-tokens": "workspace:*",
+    "@happydrive/web-ui": "workspace:*",
+    "next": "16.3.6",
+    "openapi-fetch": "0.17.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "16.3.6",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.0"
+  }
+}

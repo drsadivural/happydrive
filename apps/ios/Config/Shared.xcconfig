@@ -1,0 +1,21 @@
+// HappyDrive 共通ビルド設定
+// 注意: xcconfig では "//" がコメントになるため URL は "https:/$()/..." と書く。
+
+PRODUCT_BUNDLE_IDENTIFIER = jp.happydrive.driver
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+TARGETED_DEVICE_FAMILY = 1
+SWIFT_VERSION = 5.0
+SWIFT_STRICT_CONCURRENCY = targeted
+DEVELOPMENT_TEAM =
+CODE_SIGN_STYLE = Automatic
+
+// 利用規約・プライバシーポリシーの版（同意記録 /me/terms に送信）と公開URL
+// 事業者が公開する正式な版・URLに差し替えること（docs/spec/APPLE_RELEASE.md）
+HD_TERMS_VERSION = 2026-09-01
+HD_PRIVACY_VERSION = 2026-09-01
+HD_TERMS_URL = https:/$()/happydrive.jp/terms
+HD_PRIVACY_URL = https:/$()/happydrive.jp/privacy
+HD_SUPPORT_URL = https:/$()/happydrive.jp/support
+CODE_SIGN_ENTITLEMENTS = HappyDrive/Supporting/HappyDrive.entitlements
