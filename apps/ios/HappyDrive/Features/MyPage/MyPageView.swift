@@ -79,6 +79,8 @@ struct MyPageView: View {
 
     private var menu: some View {
         VStack(spacing: HDSpacing.sm) {
+            MenuRow(title: "AIアシスタント（音声で話す）", systemImage: "waveform") { env.router.openVoiceAssistant() }
+                .accessibilityIdentifier("voiceAssistantMenuRow")
             MenuRow(title: "報酬・振込履歴", systemImage: "yensign.circle") { env.router.push(.earnings, on: .myPage) }
             MenuRow(title: "実績・評価", systemImage: "star") { env.router.push(.results, on: .myPage) }
             MenuRow(title: "資格・講習", systemImage: "graduationcap") { env.router.push(.skills, on: .myPage) }

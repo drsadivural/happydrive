@@ -62,6 +62,12 @@ struct HomeView: View {
                 }
             }
             .padding(HDSpacing.lg)
+            // 右下の「音声で話す」ボタンに最後の項目が隠れないように
+            .padding(.bottom, 72)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            VoiceAssistantLaunchButton()
+                .padding(HDSpacing.lg)
         }
         .hdScreenBackground()
         .toolbar(.hidden, for: .navigationBar)
@@ -278,5 +284,33 @@ struct AssignmentRow: View {
             }
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// AIアシスタント（音声会話）を開く浮きボタン
+struct VoiceAssistantLaunchButton: View {
+    @Environment(AppEnvironment.self) private var env
+
+    var body: some View {
+        Button {
+            env.router.openVoiceAssistant()
+        } label: {
+            HStack(spacing: HDSpacing.sm) {
+                Image(systemName: env.voice.state.isActive ? "waveform" : "mic.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .accessibilityHidden(true)
+                Text("音声で話す")
+                    .font(.hd(.headline, .bold))
+            }
+            .foregroundStyle(HDColor.onBrand)
+            .padding(.horizontal, HDSpacing.xl)
+            .frame(minHeight: 56)
+            .background(HDColor.brandBlue, in: Capsule())
+            .shadow(color: HDColor.navy.opacity(0.25), radius: 10, y: 4)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("voiceAssistantButton")
+        .accessibilityLabel("音声で話す")
+        .accessibilityHint("HappyDrive AIアシスタントと音声で会話します")
     }
 }

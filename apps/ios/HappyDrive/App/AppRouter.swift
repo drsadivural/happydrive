@@ -35,6 +35,12 @@ final class AppRouter {
     var jobsPath = NavigationPath()
     var learnPath = NavigationPath()
     var myPagePath = NavigationPath()
+    /// AIアシスタント（音声会話）の全画面表示
+    var isVoiceAssistantPresented = false
+
+    func openVoiceAssistant() {
+        isVoiceAssistantPresented = true
+    }
 
     func push(_ route: AppRoute, on tab: AppTab? = nil) {
         let target = tab ?? self.tab

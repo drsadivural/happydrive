@@ -295,6 +295,8 @@ final class VoiceMetricsTests: XCTestCase {
         m.assistantAudioStopped(at: t.addingTimeInterval(10.15))
         m.userTurnEnded(at: t.addingTimeInterval(20))
         m.assistantAudioStarted(at: t.addingTimeInterval(20.9))
+        m.userTurnEnded(at: t.addingTimeInterval(25), expectsAudio: false)
+        m.assistantAudioStarted(at: t.addingTimeInterval(40)) // 文字だけの応答は遅延に数えない
         m.toolFinished(latencyMs: 300, succeeded: true)
         m.toolFinished(latencyMs: 900, succeeded: false)
         m.reconnected()
@@ -304,7 +306,7 @@ final class VoiceMetricsTests: XCTestCase {
         let s = m.summary(endReason: .user_ended, endedAt: t.addingTimeInterval(61.4))
         XCTAssertEqual(s.durationSeconds, 61)
         XCTAssertEqual(s.connectMs, 800)
-        XCTAssertEqual(s.userTurns, 2)
+        XCTAssertEqual(s.userTurns, 3)
         XCTAssertEqual(s.firstAudioLatencyMsP50, 600)
         XCTAssertEqual(s.firstAudioLatencyMsP95, 900)
         XCTAssertEqual(s.interruptionStopMsP50, 150)

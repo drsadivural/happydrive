@@ -124,6 +124,19 @@
 			<false/>
 		</dict>
 		<dict>
+			<!-- 音声会話の音声は会話のために送信する（アプリ・自社サーバーには保存しない） -->
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeAudioData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+		</dict>
+		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeDeviceID</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>

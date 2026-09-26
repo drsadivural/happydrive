@@ -41,10 +41,11 @@ public struct VoiceMetricsRecorder: Sendable, Hashable {
         reconnectCount += 1
     }
 
-    /// 利用者の 1 発話が終わった（音声の区切り・テキスト送信）
-    public mutating func userTurnEnded(at date: Date) {
+    /// 利用者の 1 発話が終わった（音声の区切り・テキスト送信）。
+    /// 文字だけの応答を求めた場合（expectsAudio == false）は音声の遅延を測らない。
+    public mutating func userTurnEnded(at date: Date, expectsAudio: Bool = true) {
         userTurns += 1
-        awaitingFirstAudioSince = date
+        awaitingFirstAudioSince = expectsAudio ? date : nil
     }
 
     public mutating func assistantAudioStarted(at date: Date) {
