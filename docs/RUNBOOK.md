@@ -12,6 +12,14 @@
 
 API と Worker は同じイメージ（`services/api/Dockerfile`）。水平スケール可能（Worker のタスクは SKIP LOCKED / 集合更新で重複実行に耐える）。
 
+## 公開ステージング（iPhone 実機の接続先）
+- URL: `https://happydrive-api.ayonix.com/v1`（iOS の Debug ビルドの接続先。`apps/ios/Config/Debug.xcconfig`）
+- 構成: Cloudflare Tunnel `happydrive-api`（`/etc/cloudflared/happydrive-api.yml`、systemd `cloudflared-happydrive-api`）→ API `127.0.0.1:8090`（systemd `happydrive-api` / `happydrive-worker`、`EnvironmentFile=/etc/happydrive/api.env`、root のみ読取可）→ DB `happydrive_public`
+- 秘密値（JWT・暗号鍵）は構築時に生成した専用の値。開発用シード（公開リポジトリに既知のパスワード）は投入しない。
+- 運営アカウント作成: `sudo bash -c 'set -a; . /etc/happydrive/api.env; set +a; cd /home/ubuntu/happydrive/services/api && sudo -u ubuntu --preserve-env=NODE_ENV,DATABASE_URL,DATA_ENCRYPTION_KEY,DATA_HMAC_KEY,JWT_SECRET node --import tsx scripts/create-admin.ts --email you@example.com --name 運営 --role admin_operator'`
+- 更新手順: `git pull` → `pnpm --filter @happydrive/api build` → `sudo systemctl restart happydrive-api happydrive-worker`（マイグレーションは `node dist/db/migrate-cli.js` を同じ環境変数で実行）
+- 状態確認: `curl https://happydrive-api.ayonix.com/v1/readyz`、`journalctl -u happydrive-api -f`
+
 ## 初回構築
 1. シークレットを生成して登録: `JWT_SECRET`（32文字以上）、`DATA_ENCRYPTION_KEY` / `DATA_HMAC_KEY`（`openssl rand -base64 32`）。**暗号鍵の紛失はデータ喪失**。鍵管理サービスに保管し、ローテーション手順は下記。
 2. `MIGRATE_ON_START=true` で 1 台だけ起動するか、`pnpm --filter @happydrive/api migrate` を実行（アドバイザリロックで同時実行を防止）。

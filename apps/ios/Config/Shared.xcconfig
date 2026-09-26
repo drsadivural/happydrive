@@ -13,8 +13,8 @@ CODE_SIGN_STYLE = Automatic
 
 // 利用規約・プライバシーポリシーの版（同意記録 /me/terms に送信）と公開URL
 // 事業者が公開する正式な版・URLに差し替えること（docs/spec/APPLE_RELEASE.md）
-HD_TERMS_VERSION = 2026-09-01
-HD_PRIVACY_VERSION = 2026-09-01
+HD_TERMS_VERSION = 2026-09-26
+HD_PRIVACY_VERSION = 2026-09-26
 HD_TERMS_URL = https:/$()/happydrive.jp/terms
 HD_PRIVACY_URL = https:/$()/happydrive.jp/privacy
 HD_SUPPORT_URL = https:/$()/happydrive.jp/support

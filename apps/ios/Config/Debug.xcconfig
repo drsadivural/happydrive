@@ -1,7 +1,7 @@
 #include "Shared.xcconfig"
 
 // ローカル API（services/api）。実機から接続する場合は Mac の LAN IP に変更する。
-API_BASE_URL = http:/$()/localhost:8080/v1
+API_BASE_URL = https:/$()/happydrive-api.ayonix.com/v1
 HD_APNS_ENVIRONMENT = sandbox
 // Debug のみ localhost への HTTP を許可する Info.plist を使う
 INFOPLIST_FILE = HappyDrive/Supporting/Info-Debug.plist
