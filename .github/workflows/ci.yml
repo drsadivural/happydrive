@@ -75,12 +75,25 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - run: xcodebuild -project apps/ios/HappyDrive.xcodeproj -scheme HappyDrive -destination 'platform=iOS Simulator,name=iPhone 16' -configuration Debug build CODE_SIGNING_ALLOWED=NO
+      - name: Build app (generic iOS Simulator)
+        run: xcodebuild -project apps/ios/HappyDrive.xcodeproj -scheme HappyDrive -destination 'generic/platform=iOS Simulator' -configuration Debug build CODE_SIGNING_ALLOWED=NO
+      - name: Pick an iPhone simulator
+        id: sim
+        run: |
+          # Runner images differ in which simulators are installed; use any available iPhone,
+          # creating one from the newest installed iOS runtime if none exists.
+          udid=$(xcrun simctl list devices available -j | python3 -c 'import sys,json; d=json.load(sys.stdin)["devices"]; print(next((x["udid"] for rt,ds in sorted(d.items(), reverse=True) if "iOS" in rt for x in ds if x["name"].startswith("iPhone")), ""))')
+          if [ -z "$udid" ]; then
+            runtime=$(xcrun simctl list runtimes available -j | python3 -c 'import sys,json; r=[x for x in json.load(sys.stdin)["runtimes"] if x["platform"]=="iOS"]; print(r[-1]["identifier"] if r else "")')
+            devtype=$(xcrun simctl list devicetypes -j | python3 -c 'import sys,json; t=[x for x in json.load(sys.stdin)["devicetypes"] if x["name"].startswith("iPhone")]; print(t[-1]["identifier"])')
+            test -n "$runtime" || { echo "No iOS simulator runtime installed on this runner"; exit 1; }
+            udid=$(xcrun simctl create "CI iPhone" "$devtype" "$runtime")
+          fi
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices | grep "$udid"
       - name: HappyAvatarKit unit tests (iOS Simulator)
         working-directory: apps/ios/HappyAvatarKit
-        run: |
-          xcodebuild -list
-          xcodebuild test -scheme HappyAvatarKit -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
+        run: xcodebuild test -scheme HappyAvatarKit -destination "id=${{ steps.sim.outputs.udid }}" CODE_SIGNING_ALLOWED=NO
 
   security:
     runs-on: ubuntu-latest
