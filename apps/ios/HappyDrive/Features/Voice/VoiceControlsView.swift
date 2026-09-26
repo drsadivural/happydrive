@@ -2,26 +2,32 @@ import SwiftUI
 import HappyDriveCore
 
 /// 音声会話の操作（マイク・スピーカー・文字入力の切り替え、テキスト送信、終了）
+/// 運転中は文字入力を出さず、マイクと終了を大きなボタン（64pt 以上）にする。
 struct VoiceControlsView: View {
     let service: RealtimeVoiceService
     @Binding var draft: String
     var textFieldFocused: FocusState<Bool>.Binding
+    var isDriving = false
 
     private var connected: Bool { service.state.isConnected }
     private var micDenied: Bool { service.microphonePermission == .denied }
 
     var body: some View {
         VStack(spacing: HDSpacing.md) {
-            if service.isTextMode && service.state.isActive {
-                textInput
+            if isDriving {
+                drivingControls
+            } else {
+                if service.isTextMode && service.state.isActive {
+                    textInput
+                }
+                HStack(alignment: .top, spacing: HDSpacing.lg) {
+                    micButton
+                    speakerButton
+                    keyboardButton
+                }
+                .frame(maxWidth: .infinity)
+                primaryAction
             }
-            HStack(alignment: .top, spacing: HDSpacing.lg) {
-                micButton
-                speakerButton
-                keyboardButton
-            }
-            .frame(maxWidth: .infinity)
-            primaryAction
         }
         .padding(.horizontal, HDSpacing.lg)
         .padding(.top, HDSpacing.md)
@@ -29,6 +35,45 @@ struct VoiceControlsView: View {
         .background(HDColor.surface.ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
             Rectangle().fill(HDColor.border).frame(height: 1)
+        }
+    }
+
+    // MARK: 運転中
+
+    /// 運転中：大きなマイク・終了ボタン（会話が終わっていれば再開ボタン）
+    @ViewBuilder
+    private var drivingControls: some View {
+        if service.state.isActive {
+            HStack(alignment: .top, spacing: HDSpacing.xl) {
+                micButton
+                    .environment(\.voiceToggleSize, 76)
+                speakerButton
+                    .environment(\.voiceToggleSize, 64)
+                Button(role: .destructive) {
+                    textFieldFocused.wrappedValue = false
+                    service.end(reason: .user_ended)
+                } label: {
+                    VStack(spacing: HDSpacing.xs) {
+                        Image(systemName: "phone.down.fill")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(HDColor.onBrand)
+                            .frame(width: 76, height: 76)
+                            .background(HDColor.danger, in: Circle())
+                            .accessibilityHidden(true)
+                        Text("終了")
+                            .font(.hd(.caption, .semibold))
+                            .foregroundStyle(HDColor.danger)
+                    }
+                    .frame(minWidth: 76, minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("voiceEndButton")
+                .accessibilityLabel("音声会話を終了")
+            }
+            .frame(maxWidth: .infinity)
+        } else {
+            primaryAction
         }
     }
 
@@ -189,6 +234,7 @@ struct VoiceToggleButton: View {
     let action: () -> Void
 
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.voiceToggleSize) private var size
 
     private var filled: Bool { filledWhenOff ? !isOn : isOn }
 
@@ -196,9 +242,9 @@ struct VoiceToggleButton: View {
         Button(action: action) {
             VStack(spacing: HDSpacing.xs) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.system(size: size * 0.37, weight: .semibold))
                     .foregroundStyle(filled ? HDColor.onBrand : tint)
-                    .frame(width: 60, height: 60)
+                    .frame(width: size, height: size)
                     .background(filled ? AnyShapeStyle(tint) : AnyShapeStyle(tint.opacity(0.12)), in: Circle())
                     .accessibilityHidden(true)
                 Text(title)
@@ -208,11 +254,23 @@ struct VoiceToggleButton: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
             }
-            .frame(minWidth: 72, minHeight: 44)
+            .frame(minWidth: max(72, size), minHeight: 44)
             .contentShape(Rectangle())
             .opacity(isEnabled ? 1 : 0.45)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+}
+
+private struct VoiceToggleSizeKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 60
+}
+
+extension EnvironmentValues {
+    /// 丸い切り替えボタンの直径（運転中は大きくする）
+    var voiceToggleSize: CGFloat {
+        get { self[VoiceToggleSizeKey.self] }
+        set { self[VoiceToggleSizeKey.self] = newValue }
     }
 }

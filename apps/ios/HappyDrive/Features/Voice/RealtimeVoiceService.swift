@@ -3,6 +3,7 @@ import Foundation
 import Observation
 import os
 import HappyDriveCore
+import HappyAvatarKit
 
 /// マイクの権限
 enum MicrophonePermission: Equatable {
@@ -32,6 +33,13 @@ final class RealtimeVoiceService {
     private(set) var outputLevel: Double = 0
     /// 一時的なお知らせ（会話終了の理由など）
     var notice: String?
+    /// 会話ごとのアバター（開始で作成、利用者が終了・閉じると解放。エラー時は表示のため残す）
+    private(set) var avatar: HappyAvatarController?
+
+    /// 会話が続いている、またはエラーを利用者がまだ閉じていない（ミニ表示・終了ボタンを出す）
+    var hasOngoingSession: Bool {
+        state.isActive || (avatar != nil && state.error != nil)
+    }
 
     /// 実際にマイクの音を送っている（常時表示のインジケーター用）
     var isMicrophoneCapturing: Bool {
@@ -72,6 +80,8 @@ final class RealtimeVoiceService {
     @ObservationIgnored private var graceTask: Task<Void, Never>?
     @ObservationIgnored private var toolTasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored private var levelTask: Task<Void, Never>?
+    /// 会話の状態・音量・業務イベントをアバターへ伝える（状態は VoiceStateMachine から導くだけ）
+    @ObservationIgnored private var avatarBridge: HappyVoiceAvatarBridge?
 
     init(api: HappyDriveAPI, network: NetworkMonitor, configuration: VoiceConfiguration = .default, location: @escaping @Sendable () async -> GeoPoint?) {
         self.api = api
@@ -84,7 +94,9 @@ final class RealtimeVoiceService {
         audio.onRouteChanged = { [weak self] route in self?.audioRoute = route }
         audio.onMediaServicesReset = { [weak self] in self?.handleConnectionLoss(code: "media_services_reset") }
         network.addObserver { [weak self] online in
-            if !online { self?.handleConnectionLoss(code: "offline") }
+            guard !online, let self else { return }
+            self.handleHappyDriveEvent(.connectionProblem)
+            self.handleConnectionLoss(code: "offline")
         }
         microphonePermission = Self.currentPermission()
     }
@@ -99,6 +111,7 @@ final class RealtimeVoiceService {
     func start() {
         guard !state.isActive else { return }
         notice = nil
+        makeAvatar()
         transition(.startRequested)
         tracker = RealtimeTurnTracker()
         metrics = VoiceMetricsRecorder()
@@ -115,7 +128,16 @@ final class RealtimeVoiceService {
         let endedSessionId = sessionId
         teardown()
         transition(.endRequested)
+        releaseAvatar()
         submit(summary, sessionId: endedSessionId)
+    }
+
+    /// 閉じる操作（✕・ミニ表示の終了ボタン）：会話中なら終了し、エラー表示中ならアバターも片付ける
+    func close() {
+        if state.isActive || webRTC != nil {
+            end(reason: .user_ended)
+        }
+        releaseAvatar()
     }
 
     /// サインアウト時：会話を止めて記録を消す
@@ -123,6 +145,7 @@ final class RealtimeVoiceService {
         end(reason: .user_ended)
         transcript.removeAll()
         state = .idle
+        releaseAvatar()
         notice = nil
         isTextMode = false
         isMicrophoneMuted = false
@@ -282,6 +305,7 @@ final class RealtimeVoiceService {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, state.isConnected else { return false }
         let text = String(trimmed.prefix(runConfig.maxTextMessageLength))
+        let wasSpeaking = tracker.isAssistantAudioPlaying
         if tracker.isAssistantAudioPlaying {
             send(.outputAudioBufferClear)
             if let itemId = tracker.currentAssistantItemId { transcript.markInterrupted(itemId: itemId) }
@@ -289,6 +313,10 @@ final class RealtimeVoiceService {
         }
         if tracker.isResponseActive {
             send(.responseCancel(responseId: tracker.activeResponseId))
+        }
+        if wasSpeaking {
+            // 再生停止・応答取り消しを送った直後に口を閉じる
+            avatarBridge?.handle(.assistantInterrupted)
         }
         guard send(.userText(text)) else {
             notice = "送信できませんでした。通信状態を確認してください。"
@@ -436,6 +464,7 @@ final class RealtimeVoiceService {
     }
 
     private func perform(_ actions: [RealtimeTurnAction], now: Date) {
+        var interrupted = false
         for action in actions {
             switch action {
             case .send(let event):
@@ -444,9 +473,14 @@ final class RealtimeVoiceService {
                 transcript.markInterrupted(itemId: itemId)
             case .bargeIn:
                 metrics.interruptionStarted(at: now)
+                interrupted = true
             case .dispatchTool(let call):
                 runTool(call)
             }
+        }
+        if interrupted {
+            // output_audio_buffer.clear / response.cancel を送った直後に口を閉じる
+            avatarBridge?.handle(.assistantInterrupted)
         }
     }
 
@@ -494,32 +528,43 @@ final class RealtimeVoiceService {
         if let code = result.errorCode {
             HDLog.voice.error("tool \(call.name, privacy: .public) failed code=\(code, privacy: .public)")
         }
+        if result.succeeded && AvatarDomainSignal.containsJobs(toolName: call.name, output: result.output) {
+            handleHappyDriveEvent(.nearbyJob)
+        }
         perform(tracker.toolCompleted(callId: call.callId, output: result.output, textOnly: isTextMode), now: Date())
         pendingToolCount = tracker.pendingToolCount
         lastActivityAt = Date()
     }
 
-    // MARK: - 音量（スペクトラム表示）
+    // MARK: - 音量（スペクトラム表示・アバターの口）
 
-    /// 約12回/秒で WebRTC の統計から音量を読む。音声データそのものには触れない。
+    /// WebRTC の統計から音量を読む（回答中は約30回/秒、それ以外は約12回/秒）。音声データそのものには触れない。
+    /// 統計の集計は WebRTC のスレッドで行い、メインスレッドには最終的な値だけを渡す。
     private func startLevelMeter() {
         levelTask?.cancel()
-        levelTask = Task { [weak self] in
+        guard let client = webRTC else { return }
+        let meterGeneration = generation
+        levelTask = Task.detached(priority: .utility) { [weak self] in
+            var interval = VoiceLevelMeter.idleIntervalNanos
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 80_000_000)
-                guard !Task.isCancelled, let self else { return }
-                await self.pollLevels()
+                try? await Task.sleep(nanoseconds: interval)
+                guard !Task.isCancelled else { return }
+                let levels = await client.audioLevels()
+                guard let self, let next = await self.applyPolledLevels(levels, generation: meterGeneration) else { return }
+                interval = next
             }
         }
     }
 
-    private func pollLevels() async {
-        guard let client = webRTC, state.isConnected else {
+    /// 取得した音量を反映し、次の取得間隔を返す（接続が替わっていたら nil で止める）
+    private func applyPolledLevels(_ levels: VoiceAudioLevels?, generation meterGeneration: Int) -> UInt64? {
+        guard meterGeneration == generation, !Task.isCancelled else { return nil }
+        if !state.isConnected {
             applyLevels(VoiceAudioLevels(input: 0, output: 0))
-            return
+        } else if let levels {
+            applyLevels(levels)
         }
-        guard let levels = await client.audioLevels() else { return }
-        applyLevels(levels)
+        return VoiceLevelMeter.pollInterval(for: state)
     }
 
     private func applyLevels(_ raw: VoiceAudioLevels) {
@@ -532,6 +577,10 @@ final class RealtimeVoiceService {
         let nextOutput = smooth(outputLevel, raw.output)
         if abs(nextInput - inputLevel) > 0.0005 { inputLevel = nextInput }
         if abs(nextOutput - outputLevel) > 0.0005 { outputLevel = nextOutput }
+        if state == .assistantSpeaking {
+            // 口の平滑化はアバター側で行うため、生の出力音量を見た目の大きさに変換して渡す
+            avatarBridge?.handle(.assistantAudioLevel(VoiceLevelMeter.normalized(raw.output)))
+        }
     }
 
     // MARK: - 時間の上限
@@ -584,6 +633,10 @@ final class RealtimeVoiceService {
         webRTC?.close()
         webRTC = nil
         generation += 1
+        levelTask?.cancel()
+        levelTask = nil
+        inputLevel = 0
+        outputLevel = 0
         tracker.resetForNewConnection()
         reconnectTask?.cancel()
         reconnectTask = Task { [weak self] in await self?.reconnectLoop() }
@@ -638,9 +691,53 @@ final class RealtimeVoiceService {
     // MARK: - 状態
 
     private func transition(_ event: VoiceEvent) {
-        let next = VoiceStateMachine.reduce(state, event)
-        guard next != state else { return }
+        let previous = state
+        let next = VoiceStateMachine.reduce(previous, event)
+        guard next != previous else { return }
         state = next
         applyMicrophoneState()
+        if let cue = AvatarCue.transition(from: previous, to: next) {
+            avatarBridge?.handle(cue.avatarEvent)
+        }
+    }
+
+    // MARK: - アバター
+
+    /// 会話ごとに新しいアバターを用意する（前回のエラー表示などを持ち越さない）
+    private func makeAvatar() {
+        avatarBridge?.handle(.ended)
+        let controller = HappyAvatarController()
+        avatar = controller
+        avatarBridge = HappyVoiceAvatarBridge(controller: controller)
+    }
+
+    private func releaseAvatar() {
+        avatarBridge?.handle(.ended)
+        avatarBridge = nil
+        avatar = nil
+    }
+
+    /// HappyDrive の業務イベント（案件・配送・ルート・通信）をアバターの表情に反映する。会話中でなければ何もしない。
+    func handleHappyDriveEvent(_ event: HappyDriveAvatarEvent) {
+        guard state.isActive, let avatarBridge else { return }
+        avatarBridge.handleHappyDriveEvent(event)
+    }
+}
+
+extension AvatarCue {
+    /// HappyAvatarKit のイベントへ 1 対 1 で変換する
+    var avatarEvent: HappyVoiceConversationEvent {
+        switch self {
+        case .idle: return .idle
+        case .connecting: return .connecting
+        case .userSpeechStarted: return .userSpeechStarted
+        case .assistantThinking: return .assistantThinking
+        case .assistantSpeechStarted: return .assistantSpeechStarted
+        case .assistantInterrupted: return .assistantInterrupted
+        case .reconnecting: return .reconnecting
+        case .connectionRecovered: return .connectionRecovered
+        case .failed: return .failed
+        case .ended: return .ended
+        }
     }
 }

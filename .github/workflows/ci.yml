@@ -76,6 +76,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: xcodebuild -project apps/ios/HappyDrive.xcodeproj -scheme HappyDrive -destination 'platform=iOS Simulator,name=iPhone 16' -configuration Debug build CODE_SIGNING_ALLOWED=NO
+      - name: HappyAvatarKit unit tests (iOS Simulator)
+        working-directory: apps/ios/HappyAvatarKit
+        run: |
+          xcodebuild -list
+          xcodebuild test -scheme HappyAvatarKit -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
 
   security:
     runs-on: ubuntu-latest

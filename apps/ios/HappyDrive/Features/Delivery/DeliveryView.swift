@@ -76,6 +76,10 @@ struct DeliveryView: View {
         .onAppear { updateLocationUse() }
         .onDisappear { env.location.end("delivery") }
         .onChange(of: model.route?.status) { _, _ in updateLocationUse() }
+        .onChange(of: env.location.lastLocation) { _, location in
+            guard let location else { return }
+            model.checkApproach(current: GeoPoint(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude), env: env)
+        }
         .sheet(item: $sheet) { s in
             switch s {
             case .addStop:

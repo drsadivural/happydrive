@@ -66,8 +66,11 @@ struct HomeView: View {
             .padding(.bottom, 72)
         }
         .overlay(alignment: .bottomTrailing) {
-            VoiceAssistantLaunchButton()
-                .padding(HDSpacing.lg)
+            // 最小化した会話のミニアバターと重ならないよう、表示中は隠す（ミニアバターから開ける）
+            if !env.showsVoiceMiniAvatar {
+                VoiceAssistantLaunchButton()
+                    .padding(HDSpacing.lg)
+            }
         }
         .hdScreenBackground()
         .toolbar(.hidden, for: .navigationBar)

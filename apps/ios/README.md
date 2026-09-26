@@ -31,6 +31,7 @@ apps/ios/
 │   ├── Supporting/              # Info.plist（Release）/ Info-Debug.plist（生成）/ entitlements
 │   └── Preview Content/         # Xcode プレビュー専用のサンプル（#if DEBUG、リリースに含まれない）
 ├── HappyDriveUITests/           # 通し UI テスト（HD_UITEST_API 未設定ならスキップ）
+├── HappyAvatarKit/              # Swift Package：音声アシスタントのアバター（SwiftUI。ロジックは Linux でもテスト可能）
 ├── HappyDriveCore/              # Swift Package：UI 以外のロジック（Linux / macOS でテスト可能）
 │   ├── Sources/HappyDriveCore/
 │   │   ├── Models/              # 契約 openapi.yaml v1.1 の Codable モデル
@@ -147,7 +148,7 @@ Linux では Swift 6.1 以降（Ubuntu は `sudo apt-get install swiftlang` ま�
 - **ツール**：`get_today_overview` / `list_delivery_stops` / `search_jobs` / `get_job_details` / `list_my_assignments` / `get_earnings_summary` / `list_unread_notifications`。端末の許可リストとサーバーが返す `tools` の両方にあるものだけ実行し、引数（日付 YYYY-MM-DD、月 YYYY-MM、UUID、列挙値）を検証してから既存の API を呼びます。不正な引数・未知のツールは実行せず `{"error":{"code","message"}}` を返します。受取人の氏名・電話・正確な位置はモデルに渡しません。
 - **文字入力**：キーボードに切り替えると、文字はデータチャネルの `conversation.item.create`（input_text）で送り、応答は文字だけ（`output_modalities: ["text"]`）を求めます。文字入力中はマイクをオフにします。
 - **会話記録**：`AppEnvironment.voice` がメモリ上だけに保持します（端末・サーバーに保存せず、音声も保存しません）。画面を閉じて開き直したときや再接続したときは、直近 12 発話を会話に入れ直して文脈を引き継ぎます。ログアウト・退会で消去します。
-- **終了**：終了ボタン・画面を閉じる・アイドル（双方の発話なし、既定 120 秒）・最大時間（既定 900 秒）・アプリのバックグラウンド移行・電話などの音声割り込み。バックグラウンドでは音声を使いません（`UIBackgroundModes` の audio は使用しない）。
+- **終了**：終了ボタン・✕（閉じる）・ミニアバターの ×・アイドル（双方の発話なし、既定 120 秒）・最大時間（既定 900 秒）・アプリのバックグラウンド移行・電話などの音声割り込み。バックグラウンドでは音声を使いません（`UIBackgroundModes` の audio は使用しない）。「最小化」で全画面を閉じたときは会話を続けます（下記「アバター」）。
 - **再接続**：通信断（NWPathMonitor）・ICE の失敗/切断（3 秒の猶予）・データチャネルの切断で、新しい一時キーを取得して最大 3 回まで再接続し、文脈を入れ直します。
 - **秘密情報**：一時キー（clientSecret）はメモリ上で接続にだけ使い、保存・ログ出力しません（`VoiceSession` の description も伏せ字）。ログには会話の本文を出しません。
 - **権限**：マイク（`NSMicrophoneUsageDescription`「AIアシスタントとの音声会話にマイクを使用します。」）。許可ダイアログは未確認のときだけ表示します。拒否されている場合は説明と「設定を開く」を表示し、文字入力で会話を続けられます。`PrivacyInfo.xcprivacy` に「音声データ（ユーザーに紐付けない・トラッキングなし・アプリの機能）」を追加しました。
@@ -155,7 +156,7 @@ Linux では Swift 6.1 以降（Ubuntu は `sudo apt-get install swiftlang` ま�
 ### テスト
 
 - `swift test --package-path apps/ios/HappyDriveCore`：状態遷移（割り込み・再接続・上限到達・終了）、全イベントの解析（未知・不正 JSON を含む）、送信 JSON、文字起こしの組み立て（差分・交互・割り込み・文脈）、ツール（許可リスト・未知・不正な引数・型違い・タイムアウト・成功時の API 呼び出しと要約）、エラーの変換、再接続の待ち時間（上限・ジッターの範囲）、指標のパーセンタイル、`VoiceSession` のデコード。
-- UI テスト `testVoiceAssistantOpensFromHome`（`HD_UITEST_API` 設定時のみ）：ホームから開き、見出し・閉じる・マイク・スピーカー・文字入力・終了を確認。API が `voice_unavailable` を返す環境では「もう一度試す」が出ることを確認。
+- UI テスト `testVoiceAssistantOpensFromHome`（`HD_UITEST_API` 設定時のみ）：ホームから開き、見出し・閉じる・マイク・スピーカー・文字入力・終了、アバター（`voiceAvatar`）、「最小化」→ ミニアバター（`voiceMiniAvatar` / `voiceMiniEndButton` / `voiceMiniMicIndicator`、「音声で話す」が隠れる）→ タップで全画面に戻る、を確認。API が `voice_unavailable` を返す環境では「もう一度試す」が出ることを確認。
 
 ### 実機での確認手順（未実施）
 
@@ -173,6 +174,79 @@ Linux では Swift 6.1 以降（Ubuntu は `sudo apt-get install swiftlang` ま�
 10. 画面の開閉を繰り返してもマイクが残らない・二重に接続しないこと（コントロールセンターのマイク使用表示を確認）
 11. マイク拒否 → 説明と「設定を開く」、文字入力での会話
 12. 「今日の予定は？」「近くの案件を探して」「今月の報酬は？」「未読のお知らせは？」でツールが呼ばれ、正しい内容を答えること
+
+## アバター（HappyAvatarKit）
+
+音声アシスタントの「Happy AI」を、HappyDrive のマスコット（ピンクの鳥）のアバターで表示します。支給された「HappyDrive Live Avatar Kit」をローカル Swift パッケージ `HappyAvatarKit/` として取り込み、本番向けに修正しました（Example は取り込んでいません）。
+
+### しくみ
+
+```
+VoiceStateMachine（唯一の状態機械）
+   │ state の遷移
+   ▼
+RealtimeVoiceService.transition ──AvatarCue.transition(from:to:)──▶ HappyVoiceAvatarBridge ──▶ HappyAvatarController ──▶ HappyAvatarView
+   │ バージイン（clear / cancel 送信直後）  ─ .assistantInterrupted ─┘            ▲
+   │ WebRTC 統計の出力音量（回答中は約30Hz）─ .assistantAudioLevel ─┘            │
+   └ handleHappyDriveEvent（案件・配送・ルート・通信） ─ handleHappyDriveEvent ──┘
+```
+
+| 層 | 場所 | 内容 |
+|---|---|---|
+| 純粋ロジック（Linux でテスト） | `HappyDriveCore/Sources/HappyDriveCore/Voice/AvatarCue.swift` | `AvatarCue.transition(from:to:)`（状態遷移 → アバターの出来事。同じ状態では出さない）、`VoiceLevelMeter`（dB 変換・取得間隔）、`AvatarDomainSignal.containsJobs`（ツール結果に案件があるか）、`DestinationApproachTracker`（200m 以内・1 配送先 1 回） |
+| アバター | `HappyAvatarKit/` | `HappyAvatarController`（状態・感情・口・まばたき・視線。描画に依存しない）、`HappyVoiceAvatarBridge`（出来事 → コントローラー）、`HappyAvatarView`（SwiftUI の描画）、`HappyVoiceScreen`（最小構成の画面。アプリでは未使用） |
+| アプリ | `HappyDrive/Features/Voice/` | `RealtimeVoiceService`（会話ごとにコントローラーとブリッジを 1 つ作成し、`avatar` として公開。終了で `.ended` を送って解放。エラー時は表示のため残し、✕ で解放）、`VoiceConversationView`（全画面）、`VoiceMiniAvatarView`（ミニアバター） |
+
+キットから変えた点：iOS 17 / macOS 14 に変更（`@Observable` のため iOS 16 ではビルドできなかった）、使っていなかった 60fps の `TimelineView` を削除し、呼吸・しっぽは状態が変わっても止まらない位相アニメーション（`phaseAnimator`）に変更、まばたきのタスクは非表示で取り消しコントローラーを弱参照で保持、`connectionRecovered` で「喜ぶ」が直後の `setIdle` で消えていた不具合を修正、`connecting` で前回のエラー表示を残さない、感情（嬉しい・わくわく・驚き・心配・眠い）を目・ほっぺ・眉で表示、NaN/範囲外の音量を無視、表示部分は `#if canImport(SwiftUI)` で囲み Linux でもロジックをテスト可能に。公開 API の名前は変えていません。
+
+### 会話の状態との対応
+
+| `VoiceConversationState` の遷移 | ブリッジへ | アバター |
+|---|---|---|
+| → requestingPermission / connecting（開始時 1 回） | `.connecting` | 待機（前回のエラーを消す） |
+| → listening（接続・回答終了など） | `.idle` | 待機「お話しください」 |
+| reconnecting → listening | `.connectionRecovered` | 待機＋喜ぶ |
+| → userSpeaking | `.userSpeechStarted` | 聞く（口を閉じる） |
+| → thinking | `.assistantThinking` | 考える（上を見る） |
+| → assistantSpeaking | `.assistantSpeechStarted` | 話す（口が音量で動く） |
+| 回答中の割り込み（`output_audio_buffer.clear` / `response.cancel` 送信直後。文字送信で止めたときも） | `.assistantInterrupted` | 口をすぐ閉じて聞く |
+| → reconnecting | `.reconnecting` | 心配 |
+| → error | `.failed` | 心配（エラー） |
+| → disconnected / idle（終了） | `.ended` | 初期状態に戻して解放 |
+
+- **口の動き**：WebRTC の `audioLevel`（線形振幅）を、スペクトラムと同じ `(20·log10(x)+50)/50`（-50dB〜0dB → 0〜1）で変換して渡します。キット側でノイズフロア（0.045）→ 正規化 → 低域通過（0.65）→ 小さければ閉じる、を行います。統計の取得は回答中だけ 33ms（約30Hz）、それ以外は 80ms（約12Hz）。上限 60Hz。集計は WebRTC のスレッドで行い、メインスレッドには最終値だけを渡します。音声データそのものには触れません。
+- **業務イベント**（会話中のときだけ。それ以外は何もしない）：`search_jobs` / `get_today_overview` の結果に案件が 1 件以上 → `.nearbyJob`（わくわく）、案件の受諾成功 → `.jobAccepted`（嬉しい）、配達完了の記録（送信済み・圏外で保留のどちらも）→ `.deliveryCompleted`（嬉しい）、ルートの最適化・並べ替えの開始 → `.routeRecalculation`（考える）、運行中に移動中（en_route）の配送先から 200m 以内 → `.destinationApproaching`（驚き、1 配送先 1 回。配送タブの位置更新を使用）、会話中に圏外 → `.connectionProblem`（心配）。
+
+### 表示モード
+
+- **全画面**（`.full`）：音声モードではアバター（画面に合わせて約 220〜260pt）と小さなスペクトラム（高さ 56）と状態。話した内容の文字は表示しません（文字入力モードのときだけ会話を文字で表示）。マイク使用中の表示・マイク/スピーカー/文字入力・終了・再試行・エラー・権限の案内は従来どおり。
+- **運転中**（`.driving`、`LocationService.isDriving`）：状態の文字だけ（案内・候補は出さない）、文字入力への切り替えを出さず、文字入力中なら音声に戻す（マイク拒否時を除く）。マイク・終了は 76pt、スピーカーは 64pt。
+- **ミニ**（`.mini`）：見出しの「最小化」（下向き矢印）で会話を続けたまま全画面を閉じると、すべてのタブの上（右下・タブバーの上）に 88pt のミニアバターを表示します。タップで全画面に戻る、× で会話を終了、下に「マイク使用中」（赤い点）/「マイクはオフ」/「接続中…」/「接続エラー」を常に表示。ドラッグで上下に動かせ、左右は近い端に吸着します（VoiceOver では「反対側へ移動」操作）。表示中はホームの「音声で話す」を隠します。読み上げは「Happy AI、回答中。タップで音声画面を開く」のように状態を含めます。
+- 画面が閉じられただけでは会話を終了しません。終了するのは ✕・「音声会話を終了」・ミニアバターの ×・バックグラウンド移行・無操作・最大時間・電話などの割り込みです。
+- 「視差効果を減らす」がオンなら、揺れ・まばたきを止め、口の開閉だけを反映します。
+
+### Rive などに置き換える
+
+`HappyAvatarController` と `HappyVoiceAvatarBridge`（と `AvatarCue`）はそのまま使い、`HappyAvatarView` だけを差し替えます。Rive の State Machine の入力に、`state`（数値化）・`emotion.rawValue`・`mouthLevel`（0〜1）・`eyeOpen`・`lookX`/`lookY` を渡してください。アプリ側は `HappyAvatarView(controller:mode:)` の呼び出し 2 か所（`VoiceConversationView`・`VoiceMiniAvatarView`）を置き換えるだけです。
+
+### テスト
+
+- `swift test --package-path apps/ios/HappyDriveCore`（`AvatarCueTests`）：全状態の遷移 → 出来事、同じ状態では出さない、実際の会話の流れ（接続 → 発話 → 回答 → 割り込み → 再接続 → 終了）、dB 変換（境界・単調・NaN）、取得間隔（回答中のみ 30Hz・60Hz 以下）、ツール結果の案件判定（実際の出力形式・空・エラー・他のツール）、目的地接近（200m 境界・1 回だけ・en_route のみ・運行中のみ・位置なし・リセット）。
+- `HappyAvatarKit` のテスト（CI の ios-app ジョブで `xcodebuild test -scheme HappyAvatarKit`、iOS シミュレータ）：ブリッジの全イベント、音量のノイズフロア・平滑化・範囲外/NaN、割り込みで口がすぐ閉じる（遅れて届いた音量でも開かない）、業務イベントの感情（全件）、`connectionRecovered` で喜ぶ、リセット。Linux でも `swift test -Xlinker --allow-shlib-undefined`（Swift 6.1 の Linux 版 libswiftObservation のリンク不具合の回避）で実行できます。
+
+### 実機での確認手順（未実施）
+
+> **口の動きと声の合い方、ナビ中のミニアバター、運転中モードは iPhone 実機でしか確認できません。この実装では実機での確認を一度も行っていません**（シミュレータでも未確認。CI ではビルドとキットの単体テストのみ）。
+
+1. 回答中、口の開閉が声とずれない・遅れない（スピーカー / AirPods / 車の Bluetooth）。無音で口が閉じる
+2. 回答中に話しかけると、音声が止まると同時に口が閉じる（連続で何度か）
+3. 考え中・再接続中・エラー・回復時の表情と、「視差効果を減らす」オンで揺れが止まること
+4. 「最小化」→ 配送タブの地図・ホーム・案件の上でミニアバターが操作の邪魔にならない。ドラッグ・端への吸着・タップで戻る・× で終了（コントロールセンターのマイク表示が消えること）
+5. ミニアバター表示中もマイク使用中の表示が常に見えること。ミュートで「マイクはオフ」に変わること
+6. 運転中（配送のルート開始後、約10km/h 超）に音声画面が状態の文字だけ・大きいボタンになること
+7. 近くの案件の検索・受諾・配達完了・ルート再計算・目的地 200m 手前・圏外で表情が変わること
+8. 最大の文字サイズ・VoiceOver（ミニアバターのラベル・「反対側へ移動」）・ダークモード
+9. 開始・最小化・再表示・終了を繰り返して、メモリが増え続けない・まばたきが止まらない/二重にならないこと
 
 ## 審査用アカウントについて
 

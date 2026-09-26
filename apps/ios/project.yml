@@ -16,6 +16,9 @@ settings:
 packages:
   HappyDriveCore:
     path: HappyDriveCore
+  # 音声アシスタントのアバター（SwiftUI）
+  HappyAvatarKit:
+    path: HappyAvatarKit
   # 音声アシスタント（OpenAI Realtime / WebRTC）。アプリ本体のみで使用
   WebRTC:
     url: https://github.com/stasel/WebRTC
@@ -47,6 +50,7 @@ targets:
         # INFOPLIST_FILE / PRODUCT_BUNDLE_IDENTIFIER / CODE_SIGN_ENTITLEMENTS / API_BASE_URL は xcconfig で指定
     dependencies:
       - package: HappyDriveCore
+      - package: HappyAvatarKit
       - package: WebRTC
         product: WebRTC
   HappyDriveUITests:

@@ -20,6 +20,11 @@ final class AppEnvironment {
     /// AIアシスタントの音声会話（会話記録はアプリの起動中だけメモリに保持）
     let voice: RealtimeVoiceService
 
+    /// 音声会話を最小化している間（会話中で全画面を閉じている）はミニアバターを出す
+    var showsVoiceMiniAvatar: Bool {
+        voice.hasOngoingSession && !router.isVoiceAssistantPresented
+    }
+
     /// 送信待ちの操作（配送・業務イベント）
     private(set) var pendingMutations: [PendingMutation] = []
     /// 4xx で送信できず破棄された操作（利用者に知らせる）
