@@ -213,6 +213,11 @@ final class LogicTests: XCTestCase {
         XCTAssertTrue(Validation.isValidPhone("09012345678"))
         XCTAssertTrue(Validation.isValidPhone("+819012345678"))
         XCTAssertFalse(Validation.isValidPhone("12345"))
+        // 070 / 080 mobile numbers
+        XCTAssertTrue(Validation.isValidPhone(Validation.normalizePhone("07089351565")))
+        XCTAssertTrue(Validation.isValidPhone(Validation.normalizePhone("070-8935-1565")))
+        XCTAssertTrue(Validation.isValidPhone(Validation.normalizePhone("０７０ ８９３５ １５６５")))
+        XCTAssertTrue(Validation.isValidPhone(Validation.normalizePhone("08012345678")))
         XCTAssertEqual(Validation.sanitizeOTP("１２３ ４５６７"), "123456")
         XCTAssertTrue(Validation.isValidOTP("123456"))
         XCTAssertFalse(Validation.isValidOTP("12345a"))
