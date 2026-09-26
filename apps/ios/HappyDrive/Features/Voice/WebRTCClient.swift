@@ -20,6 +20,12 @@ enum WebRTCConnectionState: Sendable, Equatable {
 /// - SDP は `callUrl` へ一時キー（Bearer）で POST し、応答本文を answer として設定
 /// - 相手の音声は WebRTC の音声スタック（RTCAudioSession）で再生される
 /// - WebRTC のコールバックは内部スレッドで届くため、状態は lock で守り、出来事は AsyncStream で渡す
+/// マイクとアシスタント音声の音量（0〜1 の線形振幅）
+struct VoiceAudioLevels: Sendable, Equatable {
+    var input: Double
+    var output: Double
+}
+
 final class WebRTCClient: NSObject, @unchecked Sendable {
     static let dataChannelLabel = "oai-events"
 
@@ -260,6 +266,28 @@ final class WebRTCClient: NSObject, @unchecked Sendable {
     func setMicrophoneEnabled(_ enabled: Bool) {
         let track: RTCAudioTrack? = lock.withLock { localAudioTrack }
         track?.isEnabled = enabled
+    }
+
+    /// 現在の音量（0〜1 の線形振幅）。PeerConnection の統計から、マイク（media-source）と
+    /// アシスタントの音声（inbound-rtp）の audioLevel を読む。閉じた後は nil。
+    func audioLevels() async -> VoiceAudioLevels? {
+        let pc: RTCPeerConnection? = lock.withLock { isClosed ? nil : peerConnection }
+        guard let pc else { return nil }
+        return await withCheckedContinuation { cont in
+            pc.statistics { report in
+                var levels = VoiceAudioLevels(input: 0, output: 0)
+                for stat in report.statistics.values {
+                    guard (stat.values["kind"] as? String) == "audio",
+                          let level = (stat.values["audioLevel"] as? NSNumber)?.doubleValue else { continue }
+                    switch stat.type {
+                    case "media-source": levels.input = max(levels.input, level)
+                    case "inbound-rtp": levels.output = max(levels.output, level)
+                    default: break
+                    }
+                }
+                cont.resume(returning: levels)
+            }
+        }
     }
 
     /// 接続を閉じる（何度呼んでもよい）。トラック停止 → データチャネル → PeerConnection の順に解放。

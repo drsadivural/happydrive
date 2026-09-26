@@ -1,15 +1,9 @@
 import SwiftUI
 import HappyDriveCore
 
-/// 会話の状態を表す控えめなアニメーション（状態は必ず文字とアイコンでも表示する）。
-/// 「視差効果を減らす」がオンなら動かさない。
-struct VoiceOrbView: View {
-    let state: VoiceConversationState
-    var size: CGFloat = 160
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var color: Color {
+/// 会話の状態ごとの色（オーブとスペクトラムで共通）
+enum VoiceStateStyle {
+    static func color(for state: VoiceConversationState) -> Color {
         switch state {
         case .listening, .assistantSpeaking: return HDColor.brandBlue
         case .userSpeaking: return HDColor.jobGreen
@@ -19,6 +13,17 @@ struct VoiceOrbView: View {
         case .idle, .disconnected: return HDColor.textSecondary
         }
     }
+}
+
+/// 会話の状態を表す控えめなアニメーション（状態は必ず文字とアイコンでも表示する）。
+/// 「視差効果を減らす」がオンなら動かさない。
+struct VoiceOrbView: View {
+    let state: VoiceConversationState
+    var size: CGFloat = 160
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var color: Color { VoiceStateStyle.color(for: state) }
 
     /// 揺れの大きさと速さ（状態ごと）
     private var motion: (amplitude: Double, speed: Double) {

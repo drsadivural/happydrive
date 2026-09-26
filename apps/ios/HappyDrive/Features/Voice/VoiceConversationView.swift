@@ -112,24 +112,55 @@ struct VoiceConversationView: View {
 
     // MARK: 本文
 
+    /// 音声モードでは文字起こしを表示せず、スペクトラムと状態だけを見せる。
+    /// 文字入力モードに切り替えたときだけ、会話を文字で表示する。
     @ViewBuilder
     private var content: some View {
         let items = service.transcript.displayItems
         VStack(spacing: 0) {
             notices
-            if items.isEmpty {
-                emptyState
+            if service.isTextMode {
+                if items.isEmpty { emptyState } else { VoiceTranscriptView(items: items) }
             } else {
-                HStack {
-                    Spacer()
-                    VoiceOrbView(state: service.state, size: 72)
-                    Spacer()
-                }
-                .padding(.top, HDSpacing.sm)
-                VoiceTranscriptView(items: items)
+                voiceStage(hasConversation: !items.isEmpty)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func voiceStage(hasConversation: Bool) -> some View {
+        ScrollView {
+            VStack(spacing: HDSpacing.xl) {
+                Spacer(minLength: HDSpacing.lg)
+                VoiceSpectrumView(state: service.state, inputLevel: service.inputLevel, outputLevel: service.outputLevel)
+                    .padding(.horizontal, HDSpacing.lg)
+                    .accessibilityIdentifier("voiceSpectrum")
+                Label(service.statusText, systemImage: service.state.symbol)
+                    .font(.hd(.title3, .bold))
+                    .foregroundStyle(VoiceStateStyle.color(for: service.state))
+                    .multilineTextAlignment(.center)
+                    .accessibilityHidden(true) // 見出しの状態ラベルで読み上げ済み
+                if !hasConversation {
+                    Text("今日の配送や案件、報酬について話しかけてください")
+                        .font(.hd(.body))
+                        .foregroundStyle(HDColor.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if service.state.isConnected {
+                        FlowSuggestions(suggestions: Self.suggestions) { text in
+                            service.sendText(text)
+                        }
+                    }
+                }
+                Label("運転中は画面を見ずに、音声でご利用ください。", systemImage: "car.fill")
+                    .font(.hd(.footnote))
+                    .foregroundStyle(HDColor.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(HDSpacing.lg)
+            .frame(maxWidth: .infinity)
+        }
     }
 
     @ViewBuilder

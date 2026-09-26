@@ -27,6 +27,9 @@ final class RealtimeVoiceService {
     private(set) var isSpeakerOn = true
     private(set) var audioRoute: AudioSessionManager.Route = .speaker
     private(set) var pendingToolCount = 0
+    /// スペクトラム表示用の音量（平滑化済み、0〜1 の線形振幅）
+    private(set) var inputLevel: Double = 0
+    private(set) var outputLevel: Double = 0
     /// 一時的なお知らせ（会話終了の理由など）
     var notice: String?
 
@@ -68,6 +71,7 @@ final class RealtimeVoiceService {
     @ObservationIgnored private var timerTask: Task<Void, Never>?
     @ObservationIgnored private var graceTask: Task<Void, Never>?
     @ObservationIgnored private var toolTasks: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var levelTask: Task<Void, Never>?
 
     init(api: HappyDriveAPI, network: NetworkMonitor, configuration: VoiceConfiguration = .default, location: @escaping @Sendable () async -> GeoPoint?) {
         self.api = api
@@ -187,6 +191,7 @@ final class RealtimeVoiceService {
             throw CancellationError()
         }
         metrics.connected(at: Date())
+        startLevelMeter()
         tracker.resetForNewConnection()
         replayContext()
         lastActivityAt = Date()
@@ -224,6 +229,10 @@ final class RealtimeVoiceService {
         toolTasks.values.forEach { $0.cancel() }
         toolTasks.removeAll()
         pendingToolCount = 0
+        levelTask?.cancel()
+        levelTask = nil
+        inputLevel = 0
+        outputLevel = 0
         webRTC?.close()
         webRTC = nil
         dispatcher = nil
@@ -488,6 +497,41 @@ final class RealtimeVoiceService {
         perform(tracker.toolCompleted(callId: call.callId, output: result.output, textOnly: isTextMode), now: Date())
         pendingToolCount = tracker.pendingToolCount
         lastActivityAt = Date()
+    }
+
+    // MARK: - 音量（スペクトラム表示）
+
+    /// 約12回/秒で WebRTC の統計から音量を読む。音声データそのものには触れない。
+    private func startLevelMeter() {
+        levelTask?.cancel()
+        levelTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 80_000_000)
+                guard !Task.isCancelled, let self else { return }
+                await self.pollLevels()
+            }
+        }
+    }
+
+    private func pollLevels() async {
+        guard let client = webRTC, state.isConnected else {
+            applyLevels(VoiceAudioLevels(input: 0, output: 0))
+            return
+        }
+        guard let levels = await client.audioLevels() else { return }
+        applyLevels(levels)
+    }
+
+    private func applyLevels(_ raw: VoiceAudioLevels) {
+        let input = (isMicrophoneMuted || isTextMode) ? 0 : raw.input
+        // 立ち上がりは速く、減衰はゆっくり（話し声らしく見せる）
+        func smooth(_ old: Double, _ new: Double) -> Double {
+            new > old ? old * 0.35 + new * 0.65 : old * 0.78 + new * 0.22
+        }
+        let nextInput = smooth(inputLevel, input)
+        let nextOutput = smooth(outputLevel, raw.output)
+        if abs(nextInput - inputLevel) > 0.0005 { inputLevel = nextInput }
+        if abs(nextOutput - outputLevel) > 0.0005 { outputLevel = nextOutput }
     }
 
     // MARK: - 時間の上限
