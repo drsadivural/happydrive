@@ -138,7 +138,7 @@ export const identityHandlers: HandlerMap = {
         await c.query('INSERT INTO deleted_identities(phone_hash) VALUES ($1) ON CONFLICT (phone_hash) DO UPDATE SET deleted_at = now()', [row.phone_hash]);
       }
       await c.query(
-        `UPDATE app_users SET display_name = '退会済みユーザー', phone_ciphertext = NULL, phone_hash = NULL, email = NULL,
+        `UPDATE app_users SET display_name = '退会済みユーザー', phone_ciphertext = NULL, phone_hash = NULL, email = NULL, device_secret_hash = NULL,
            password_hash = NULL, totp_secret_ciphertext = NULL, profile_ciphertext = NULL, vehicle = NULL, bank_ciphertext = NULL,
            bank_masked = NULL, preferences = '{}', verification_document_ids = '{}', token_version = token_version + 1,
            deleted_at = now(), updated_at = now()

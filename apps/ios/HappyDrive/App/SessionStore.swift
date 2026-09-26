@@ -45,15 +45,12 @@ final class SessionStore {
         user.map { OnboardingFlow.nextStep(for: $0) }
     }
 
-    /// 登録画面を全画面で出すべきか（規約同意は必須。その他は後回し可）
-    var needsOnboardingScreen: Bool {
-        guard let step = onboardingStep else { return false }
-        switch step {
-        case .complete: return false
-        case .terms: return true
-        default: return !onboardingDeferred
-        }
-    }
+    /// 起動時は登録画面を出さずにメイン画面を開く（登録・本人確認はマイページ／受諾時に案内）
+    var needsOnboardingScreen: Bool { false }
+
+    /// 端末アカウントへのサインイン中のエラー（再試行ボタンを表示）
+    private(set) var signInError: String?
+    private(set) var isSigningIn = false
 
     var acceptBlocker: String? {
         guard let user else { return "利用者情報を読み込めていません。通信状態を確認してください。" }
@@ -62,11 +59,28 @@ final class SessionStore {
 
     func bootstrap() async {
         guard api.client.isLoggedIn else {
-            phase = .signedOut
+            await signInWithDevice()
             return
         }
         phase = .signedIn
         await refreshUser()
+    }
+
+    /// 電話番号確認なしで、この端末のアカウントにサインイン（初回はアカウントを自動作成）
+    func signInWithDevice() async {
+        guard !isSigningIn else { return }
+        isSigningIn = true
+        signInError = nil
+        defer { isSigningIn = false }
+        do {
+            let secret = try DeviceCredential.loadOrCreate()
+            let result = try await api.deviceLogin(secret: secret, deviceName: Self.deviceName)
+            signedIn(result)
+        } catch {
+            signInError = error.hdUserMessage
+            HDLog.error(HDLog.app, "deviceLogin", error)
+            phase = .signedOut
+        }
     }
 
     func refreshUser() async {
@@ -94,11 +108,12 @@ final class SessionStore {
         self.user = user
     }
 
+    /// トークンが失効したら同じ端末アカウントで自動的にサインインし直す
     func handleSessionExpired() {
         guard phase == .signedIn else { return }
         user = nil
-        sessionExpiredNotice = APIError.sessionExpired.userMessage
-        phase = .signedOut
+        phase = .launching
+        Task { await signInWithDevice() }
     }
 
     func markSignedOut() {

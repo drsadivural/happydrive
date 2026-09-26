@@ -21,4 +21,5 @@
 | D-15 | Apple Developer（法人）アカウント、Bundle ID、APNs鍵、審査用アカウント | 未取得。APNs未設定時はアプリ内通知のみ | 取得後に `APNS_*`、`REVIEW_ACCOUNT_*` を設定し TestFlight へ | docs/spec/APPLE_RELEASE.md |
 | D-16 | 本番インフラ（日本リージョンのマネージドDB/オブジェクトストレージ、Cloudflare等） | Dockerfile / CI / docker-compose（開発）まで。IaCは未作成 | 事業者比較後に IaC（Terraform等）を追加。バックアップ/復旧演習を実施 | docs/RUNBOOK.md |
 | D-17 | 案件公開時の新着通知の配信範囲 | 空き待ち登録者への通知のみ（一斉配信はしない） | 配信対象（希望カテゴリ・距離）と頻度上限を決めて実装 | `releaseSlot` |
+| D-19 | ドライバーのログイン方式（**2026-09-26 依頼者判断: 電話番号確認を廃止**） | 端末アカウント（キーチェーンの乱数でサインイン、`POST /auth/device`）。起動後すぐメイン画面。受諾には本人確認が必要。新規作成は IP 単位で1時間20件まで | 1人が複数アカウントを作れる・連絡手段がない・機種変更で引き継げない点の対策（本人確認書類の重複検知、連絡先登録、引き継ぎコード等）を決定 | `modules/auth.ts deviceLogin`, iOS `SessionStore` |
 | D-18 | 退会後の再登録制限期間 | 電話番号の照合用ハッシュを30日保持し、その間は再登録不可 | 不正対策と個人情報保護のバランスで期間を確定 | `deleted_identities` |

@@ -69,6 +69,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description ドライバーアプリの端末アカウントでログイン（電話番号確認なし）。アプリは初回起動時に256bit以上の乱数（base64url）を生成して
+         *     キーチェーンに保存し、以後同じ値で送る。未登録の値なら新しいドライバーアカウントを作成する（isNewUser=true）。
+         *     サーバーは値の HMAC のみ保存する。新規作成は IP 単位で回数制限。案件の受諾には従来どおり本人確認が必要。
+         */
+        post: operations["deviceLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/refresh": {
         parameters: {
             query?: never;
@@ -2917,6 +2938,35 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            429: components["responses"]["TooManyRequests"];
+            default: components["responses"]["Default"];
+        };
+    };
+    deviceLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    deviceSecret: string;
+                    deviceName?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description ログイン成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResult"];
+                };
+            };
             429: components["responses"]["TooManyRequests"];
             default: components["responses"]["Default"];
         };

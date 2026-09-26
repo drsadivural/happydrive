@@ -142,3 +142,43 @@ describe('App Review account', () => {
     }
   });
 });
+
+describe('device account login (user decision: no phone verification in the driver app)', () => {
+  const secret = () => Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
+  const bearer = (t: string) => ({ headers: { authorization: `Bearer ${t}` } }) as any;
+
+  it('creates an account on first use and signs the same device back in', async () => {
+    const s = secret();
+    const first = await call(env, null, 'POST', '/auth/device', { deviceSecret: s, deviceName: 'iPhone' });
+    expect(first.status).toBe(200);
+    expect(first.body.isNewUser).toBe(true);
+    expect(first.body.user.roles).toContain('worker');
+    const again = await call(env, null, 'POST', '/auth/device', { deviceSecret: s });
+    expect(again.body.isNewUser).toBe(false);
+    expect(again.body.user.id).toBe(first.body.user.id);
+    const other = await call(env, null, 'POST', '/auth/device', { deviceSecret: secret() });
+    expect(other.body.user.id).not.toBe(first.body.user.id);
+    expect((await call(env, bearer(again.body.tokens.accessToken), 'GET', '/me')).status).toBe(200);
+  });
+
+  it('rejects weak secrets; accepting jobs still needs identity verification', async () => {
+    expect((await call(env, null, 'POST', '/auth/device', { deviceSecret: 'short' })).status).toBe(422);
+    const r = await call(env, null, 'POST', '/auth/device', { deviceSecret: secret() });
+    const home = await call(env, bearer(r.body.tokens.accessToken), 'GET', '/home');
+    expect(home.body.onboardingComplete).toBe(false);
+  });
+
+  it('a deleted device account cannot be signed back into', async () => {
+    const sec = secret();
+    const r = await call(env, null, 'POST', '/auth/device', { deviceSecret: sec });
+    expect((await call(env, bearer(r.body.tokens.accessToken), 'DELETE', '/me', { confirm: true })).body.status).toBe('completed');
+    const again = await call(env, null, 'POST', '/auth/device', { deviceSecret: sec });
+    expect(again.body.user.id).not.toBe(r.body.user.id);
+  });
+
+  it('limits new device accounts per IP', async () => {
+    let last = 0;
+    for (let i = 0; i < 21; i++) last = (await call(env, null, 'POST', '/auth/device', { deviceSecret: secret() }, {}, '198.51.100.9')).status;
+    expect(last).toBe(429);
+  });
+});

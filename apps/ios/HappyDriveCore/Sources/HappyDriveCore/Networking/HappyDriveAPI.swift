@@ -12,6 +12,13 @@ public struct HappyDriveAPI: Sendable {
 
     // MARK: - Auth
 
+    /// 端末アカウントでログイン（初回は自動でアカウント作成）し、トークンを保存する。
+    public func deviceLogin(secret: String, deviceName: String?) async throws -> AuthResult {
+        let result: AuthResult = try await client.send(try .json(.post, "/auth/device", body: DeviceLoginBody(deviceSecret: secret, deviceName: deviceName), requiresAuth: false))
+        try client.tokenStore.saveTokens(result.tokens)
+        return result
+    }
+
     public func requestOTP(phone: String) async throws -> OTPRequestResult {
         try await client.send(try .json(.post, "/auth/otp/request", body: OTPRequestBody(phone: phone), requiresAuth: false))
     }

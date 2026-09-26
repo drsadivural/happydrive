@@ -19,6 +19,16 @@ public struct OTPRequestResult: Codable, Sendable, Hashable {
     }
 }
 
+/// 端末アカウントでのログイン（電話番号確認なし）。deviceSecret はキーチェーンに保存した乱数。
+public struct DeviceLoginBody: Codable, Sendable, Hashable {
+    public var deviceSecret: String
+    public var deviceName: String?
+    public init(deviceSecret: String, deviceName: String? = nil) {
+        self.deviceSecret = deviceSecret
+        self.deviceName = deviceName
+    }
+}
+
 public struct OTPVerifyBody: Codable, Sendable, Hashable {
     public var phone: String
     public var code: String

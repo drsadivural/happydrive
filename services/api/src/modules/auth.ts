@@ -16,6 +16,7 @@ const OTP_MAX_PER_PHONE_HOUR = 5;
 const OTP_MAX_PER_IP_HOUR = 20;
 const OTP_MAX_ATTEMPTS = 5;
 const WEB_LOGIN_MAX_FAILS = 10;
+const DEVICE_SIGNUPS_PER_IP_HOUR = 20;
 const WEB_LOGIN_WINDOW_MIN = 15;
 
 const codeHash = (ctx: AppContext, phoneHash: Buffer, code: string) => ctx.cipher.blindIndex(`otp:${phoneHash.toString('hex')}:${code}`);
@@ -124,6 +125,33 @@ export const authHandlers: HandlerMap = {
         userId = ins.rows[0]!.id;
         isNewUser = true;
         await recordEvent(c, { entityType: 'user', entityId: userId, eventType: 'registered', actor: { id: userId, role: 'worker' } });
+      }
+      const tokens = await issueTokens(ctx, c, userId, b.deviceName);
+      return { tokens, user: await loadMe(ctx, userId, c), isNewUser };
+    });
+  },
+
+  async deviceLogin(ctx, req) {
+    const b = body<{ deviceSecret: string; deviceName?: string }>(req);
+    const hash = ctx.cipher.blindIndex(`device:${b.deviceSecret}`);
+    const existing = await ctx.db.query('SELECT id FROM app_users WHERE device_secret_hash = $1 AND deleted_at IS NULL', [hash]);
+    if (!existing.rows[0]) {
+      const key = `device-signup-ip:${req.ip}`;
+      if ((await countAttempts(ctx, key, 60)) >= DEVICE_SIGNUPS_PER_IP_HOUR) throw tooMany('短時間に多くの登録が行われました。時間をおいてお試しください');
+      await ctx.db.query('INSERT INTO auth_attempts(key) VALUES ($1)', [key]);
+    }
+    return withTx(ctx.db, async (c) => {
+      let userId = existing.rows[0]?.id as string | undefined;
+      let isNewUser = false;
+      if (!userId) {
+        const ins = await c.query<{ id: string }>(
+          `INSERT INTO app_users(display_name, device_secret_hash, roles, preferences) VALUES ('ドライバー', $1, '{worker}', $2)
+           ON CONFLICT (device_secret_hash) DO UPDATE SET updated_at = now() RETURNING id, (xmax = 0) AS inserted`,
+          [hash, { useLocationForMatching: true, useHistoryForMatching: true, notifyNewJobs: true, notifyMessages: true, showRatingToOrganizations: true, maxDistanceKm: 10 }],
+        );
+        userId = ins.rows[0]!.id;
+        isNewUser = (ins.rows[0] as any).inserted;
+        if (isNewUser) await recordEvent(c, { entityType: 'user', entityId: userId, eventType: 'registered_device', actor: { id: userId, role: 'worker' } });
       }
       const tokens = await issueTokens(ctx, c, userId, b.deviceName);
       return { tokens, user: await loadMe(ctx, userId, c), isNewUser };

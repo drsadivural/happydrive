@@ -50,6 +50,32 @@ enum KeychainItem {
     }
 }
 
+/// 端末アカウントの秘密値（256bit 乱数、base64url）。この端末のキーチェーンにのみ保存し、サーバーへはログイン時に送る。
+enum DeviceCredential {
+    private static let service = "jp.happydrive.driver.device"
+    private static let account = "secret"
+
+    static func loadOrCreate() throws -> String {
+        if let data = KeychainItem.read(service: service, account: account), let s = String(data: data, encoding: .utf8), s.count >= 43 {
+            return s
+        }
+        var bytes = [UInt8](repeating: 0, count: 32)
+        let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        guard status == errSecSuccess else { throw NSError(domain: NSOSStatusErrorDomain, code: Int(status)) }
+        let secret = Data(bytes).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+        try KeychainItem.write(Data(secret.utf8), service: service, account: account)
+        return secret
+    }
+
+    /// 退会後に呼ぶ。次回起動時は新しいアカウントになる。
+    static func reset() {
+        KeychainItem.delete(service: service, account: account)
+    }
+}
+
 /// 認証トークンを Keychain に保存する TokenStore
 final class KeychainTokenStore: TokenStore, @unchecked Sendable {
     private let service = "jp.happydrive.driver.auth"

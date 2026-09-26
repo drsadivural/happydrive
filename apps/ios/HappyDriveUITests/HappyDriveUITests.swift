@@ -4,8 +4,8 @@ import XCTest
 ///
 /// 実行条件（環境変数。Xcode のスキームまたは `xcodebuild test` で指定）:
 /// - HD_UITEST_API    : 接続先 API（例 http://localhost:8080/v1）。未設定なら試験全体をスキップ
-/// - HD_UITEST_PHONE  : 審査済み（verified）のテスト用ドライバーの電話番号
-/// - HD_UITEST_OTP    : その番号で有効な確認コード（開発用 API のログに出力されるコード、または固定コード）
+/// 電話番号確認は無く、起動時にこの端末のアカウントへ自動でサインインする。
+/// 受諾まで進めるには、運営Webでそのアカウントを本人確認済みにしておくこと。
 ///
 /// 事前に API 側で、受諾可能な公開案件（開始30分前以降・チェックイン半径内に位置を設定できるもの）を用意すること。
 /// シミュレータの位置は Xcode の「Simulate Location」で案件の集合場所に合わせる。
@@ -34,22 +34,10 @@ final class HappyDriveUITests: XCTestCase {
     }
 
     func testOnboardingSearchAcceptCompleteEarnings() throws {
-        let env = ProcessInfo.processInfo.environment
-        let phone = try XCTUnwrap(env["HD_UITEST_PHONE"], "HD_UITEST_PHONE を設定してください")
-        let otp = try XCTUnwrap(env["HD_UITEST_OTP"], "HD_UITEST_OTP を設定してください")
-
-        // 1. ログイン
-        if app.buttons["startButton"].waitForExistence(timeout: 10) {
+        // 1. 起動するとこの端末のアカウントに自動でサインインし、メイン画面が開く（電話番号確認なし）。
+        //    受諾まで進めるには、運営Webでこの端末のアカウントを本人確認済みにしておくこと。
+        if app.buttons["startButton"].waitForExistence(timeout: 5) {
             app.buttons["startButton"].tap()
-            let phoneField = app.textFields["phoneField"]
-            XCTAssertTrue(phoneField.waitForExistence(timeout: 5))
-            phoneField.tap()
-            phoneField.typeText(phone)
-            app.buttons["sendCodeButton"].tap()
-            let otpField = app.textFields["otpField"]
-            XCTAssertTrue(otpField.waitForExistence(timeout: 10), "確認コード画面に進めません")
-            otpField.tap()
-            otpField.typeText(otp)
         }
 
         // 2. 登録（規約未同意なら同意。審査済みユーザーを前提とする）

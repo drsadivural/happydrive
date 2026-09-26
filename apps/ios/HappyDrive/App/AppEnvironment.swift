@@ -113,6 +113,7 @@ final class AppEnvironment {
     /// 退会完了後（サーバー側でトークンは失効済み）
     func finishAccountDeletion() async {
         api.client.tokenStore.clearTokens()
+        DeviceCredential.reset()
         await clearLocalData()
         session.markSignedOut()
     }

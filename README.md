@@ -64,7 +64,7 @@ HD_API_BASE_URL=http://localhost:8080/v1 pnpm --filter @happydrive/partner-web d
 HD_API_BASE_URL=http://localhost:8080/v1 pnpm --filter @happydrive/admin-web dev
 ```
 
-`seed:dev` が表示する開発用アカウント（運営／企業の TOTP シークレット、ドライバー電話番号 090-0000-0001）でログインできます。開発環境では SMS を送らず、確認コードを API のログに出力します（本番では起動拒否）。iOS は `apps/ios/README.md` を参照してください。
+`seed:dev` が表示する開発用アカウント（運営／企業の TOTP シークレット）で Web にログインできます。ドライバーアプリは電話番号確認なしで、起動時に端末のアカウントへ自動でサインインします（docs/DECISIONS_REQUIRED.md D-19）。iOS は `apps/ios/README.md` を参照してください。
 
 ## 試験
 

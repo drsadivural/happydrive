@@ -71,6 +71,20 @@ paths:
         '401': {$ref: '#/components/responses/Unauthorized'}
         '403': {$ref: '#/components/responses/Forbidden'}
         '429': {$ref: '#/components/responses/TooManyRequests'}
+  /auth/device:
+    post:
+      tags: [Auth]
+      operationId: deviceLogin
+      security: []
+      description: |
+        ドライバーアプリの端末アカウントでログイン（電話番号確認なし）。アプリは初回起動時に256bit以上の乱数（base64url）を生成して
+        キーチェーンに保存し、以後同じ値で送る。未登録の値なら新しいドライバーアカウントを作成する（isNewUser=true）。
+        サーバーは値の HMAC のみ保存する。新規作成は IP 単位で回数制限。案件の受諾には従来どおり本人確認が必要。
+      requestBody: {required: true, content: {application/json: {schema: {type: object, additionalProperties: false, required: [deviceSecret], properties: {deviceSecret: {type: string, minLength: 43, maxLength: 128, pattern: '^[A-Za-z0-9_-]+$'}, deviceName: {type: string, maxLength: 100}}}}}}
+      responses:
+        default: {$ref: '#/components/responses/Default'}
+        '200': {description: ログイン成功, content: {application/json: {schema: {$ref: '#/components/schemas/AuthResult'}}}}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
   /auth/refresh:
     post:
       tags: [Auth]
