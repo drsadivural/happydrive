@@ -21,6 +21,8 @@
 		2553B15ED996FB458041FE6F = {isa = PBXBuildFile; fileRef = 60BCF3F279AA47B7AE65649D; };
 		294D30456192F4A39525218B = {isa = PBXBuildFile; fileRef = B6090A9043C0C987D9B8BC00; };
 		29F4003BDE84BD38031F7B15 = {isa = PBXBuildFile; productRef = 510C57A19C2E2CC95879912E; };
+		3A61651563DA74736D7DF0EF = {isa = PBXBuildFile; fileRef = F2E52C8BB8C4BB2BC3E8A9D1; };
+		3ADE960B71995416E95EE7FB = {isa = PBXBuildFile; fileRef = DCADC67CA2BBB7CB87211F85; };
 		3CD0240AF702EF32180DFCBE = {isa = PBXBuildFile; fileRef = 88A8D288D3AE180F6CD25375; };
 		4BB2D64A07A7332BD6A1D2E4 = {isa = PBXBuildFile; fileRef = 7B55206EDC3B66A30574E940; };
 		5B4DFB77ED44F713F60711C7 = {isa = PBXBuildFile; fileRef = AD54DD634AF600A1EA96E06B; };
@@ -32,6 +34,7 @@
 		768120BC66FF717C4C790026 = {isa = PBXBuildFile; fileRef = 4679FAADA51F4812CC8D5326; };
 		7C096BCD7327247A6DC36A41 = {isa = PBXBuildFile; fileRef = 3AD61D6F332ED68D0924FB3F; };
 		7FD7203FDD1861EE8DAD4621 = {isa = PBXBuildFile; fileRef = F8C7510E059E3F40037CCB1C; };
+		882A887A569499154AE64012 = {isa = PBXBuildFile; fileRef = 5F0FDFF7275278957FDA6A37; };
 		8C392C11ADC5B9A5AFB78673 = {isa = PBXBuildFile; fileRef = CCE502C825D93DF4732002BE; };
 		936362F0247DBF1BF7BD20EB = {isa = PBXBuildFile; fileRef = EDDD411DC4CCFA851818D6B6; };
 		9517C772C4369A7BBC40EA25 = {isa = PBXBuildFile; fileRef = 82C460D247F8E3463C0761B5; };
@@ -40,8 +43,10 @@
 		A352A58A24A7F7B9105B10E9 = {isa = PBXBuildFile; fileRef = 6DA1E8B0208B10665ADBBF9E; };
 		A4493F7D4EE1FEB8CE6F239C = {isa = PBXBuildFile; fileRef = 96417D46F32108A6D6AB7218; };
 		A4FB9249BC258A567C3CD508 = {isa = PBXBuildFile; fileRef = 1FE2D47B4B7DB189095EDBB3; };
+		ADDB33F1B0BF247ED403AB48 = {isa = PBXBuildFile; fileRef = 7A309CD5133156C09B63C7FD; };
 		AF781C4BC35ED6196F89288E = {isa = PBXBuildFile; fileRef = A76E333EDC3D6573B0FAA90E; };
 		B7BDE7123B2A11E251EF16E1 = {isa = PBXBuildFile; fileRef = 796ABE6887FD9D0671C9F499; };
+		C7D42667F2D6AB2F12BCA3C8 = {isa = PBXBuildFile; productRef = 20BBECF369D3B33C2BDDE127; };
 		CAA31AB673CA67FAF4C0B500 = {isa = PBXBuildFile; fileRef = 1500995831041DE434FBD558; };
 		D1458990671DD5F827F4AC65 = {isa = PBXBuildFile; fileRef = EADAE4C5C786EEBE7527E9E9; };
 		D2710BE82853250C499A424E = {isa = PBXBuildFile; fileRef = 3EEAA84727B31B2DE4645E81; };
@@ -49,10 +54,13 @@
 		D5A7DE7113F22D02B52F67B8 = {isa = PBXBuildFile; fileRef = 8F7263D557DC16CA409E4B61; };
 		DBB32B54E96710495DB92DC1 = {isa = PBXBuildFile; fileRef = 69438781CC15DFF250B6E15A; };
 		E17A04F65A60D61917E648D8 = {isa = PBXBuildFile; fileRef = C650E510ED37EAFC1C12FE40; };
+		E4B4064A1115F3F76093AACB = {isa = PBXBuildFile; fileRef = 5F6ECAA6CECBDE9D93A6F66B; };
 		E4E7A5046D3D8DCAA5E6311E = {isa = PBXBuildFile; fileRef = 131E26E52C163E68A4E8C206; };
 		E4FD0732FF3211EAEAC6AF31 = {isa = PBXBuildFile; fileRef = FF5DAAD2FA26A0B137830D62; };
 		E68239A70BE68955FB8980D4 = {isa = PBXBuildFile; fileRef = 84CDB10E36EEFDF07F94A704; };
 		F76E4E71E35CA750B55AC22C = {isa = PBXBuildFile; fileRef = F0B9289CA0CF9D30DB8E5F80; };
+		F985C0393B1D7C4B2121EF2A = {isa = PBXBuildFile; fileRef = 4473BA0C4FE10AF0F212BED2; };
+		FA63ABE7D96DCB20EC4724A5 = {isa = PBXBuildFile; fileRef = 47FA53729A4738972DCBBE67; };
 		FD08365629F2FDA9760D7637 = {isa = PBXBuildFile; fileRef = 51D0BFDA46079E9F6BA9919E; };
 /* End PBXBuildFile section */
 
@@ -76,11 +84,15 @@
 		3280A7A68CEC44EEB52F8181 = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
 		3AD61D6F332ED68D0924FB3F = {isa = PBXFileReference; lastKnownFileType = file; path = "NotoSansJP-VF.ttf"; sourceTree = "<group>"; };
 		3EEAA84727B31B2DE4645E81 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningViews.swift; sourceTree = "<group>"; };
+		4473BA0C4FE10AF0F212BED2 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeVoiceService.swift; sourceTree = "<group>"; };
 		4679FAADA51F4812CC8D5326 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		47FA53729A4738972DCBBE67 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCClient.swift; sourceTree = "<group>"; };
 		4DC9F543E39C8E2F7637C0F0 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopDetailView.swift; sourceTree = "<group>"; };
 		4DF2DE23E3AFA44B1B0A22A1 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Debug.plist"; sourceTree = "<group>"; };
 		51569B5BC4A5FADF5B835308 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		51D0BFDA46079E9F6BA9919E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemServices.swift; sourceTree = "<group>"; };
+		5F0FDFF7275278957FDA6A37 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTranscriptView.swift; sourceTree = "<group>"; };
+		5F6ECAA6CECBDE9D93A6F66B = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceConversationView.swift; sourceTree = "<group>"; };
 		60BCF3F279AA47B7AE65649D = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		69438781CC15DFF250B6E15A = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		6B32ADFC3C6C150E7D7F167F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRouter.swift; sourceTree = "<group>"; };
@@ -88,6 +100,7 @@
 		7714842F28CB6736F04552E3 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HappyDriveApp.swift; sourceTree = "<group>"; };
 		78BC6A6F439B56941B677FD5 = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		796ABE6887FD9D0671C9F499 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		7A309CD5133156C09B63C7FD = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceControlsView.swift; sourceTree = "<group>"; };
 		7B4AD20FFA33A92E2759688F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateViews.swift; sourceTree = "<group>"; };
 		7B55206EDC3B66A30574E940 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7BCB16F54DCD03A14E665408 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
@@ -109,11 +122,13 @@
 		C650E510ED37EAFC1C12FE40 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoAttachments.swift; sourceTree = "<group>"; };
 		CCE502C825D93DF4732002BE = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcceptConfirmationSheet.swift; sourceTree = "<group>"; };
 		CE7B17E3569D1C484AFDF797 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DCADC67CA2BBB7CB87211F85 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOrbView.swift; sourceTree = "<group>"; };
 		DD541F1DE7FC02F897372CD5 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDTokens.swift; sourceTree = "<group>"; };
 		E0DB61AC39DAFDC9FEFE03EE = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportView.swift; sourceTree = "<group>"; };
 		EADAE4C5C786EEBE7527E9E9 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryView.swift; sourceTree = "<group>"; };
 		EDDD411DC4CCFA851818D6B6 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		F0B9289CA0CF9D30DB8E5F80 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptimizeSheet.swift; sourceTree = "<group>"; };
+		F2E52C8BB8C4BB2BC3E8A9D1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionManager.swift; sourceTree = "<group>"; };
 		F8C7510E059E3F40037CCB1C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		FE928798F5FB4717D4C728E4 = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		FF5DAAD2FA26A0B137830D62 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVImportView.swift; sourceTree = "<group>"; };
@@ -121,17 +136,18 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		929B4F3ADEE074A2048A5C9B = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		BB33686D42DB52E6DE14D89D = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (29F4003BDE84BD38031F7B15, ); runOnlyForDeploymentPostprocessing = 0; };
+		BB33686D42DB52E6DE14D89D = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (29F4003BDE84BD38031F7B15, C7D42667F2D6AB2F12BCA3C8, ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		02AB67F8EA8D6BF0B28AC563 = {isa = PBXGroup; children = (A8DC107F2321ABFAF538EA71, ); path = HappyDriveUITests; sourceTree = "<group>"; };
 		2C48ED5978EC5F9CAC5895FB = {isa = PBXGroup; children = (44591BACFA8731837613FE5F, 8D08FF7934D17B247AEA213D, 7DA6DEB9D2F38FA0FDE1CC19, D4AAF4B2DCB3A2F40F8B3104, DDEBFA481EF21B30989B4AFD, 57B38A60BDF3687FE4FD3220, CF3BEAFA1D810252407738F9, ); path = HappyDrive; sourceTree = "<group>"; };
+		430F50A14E9824AE6AF2E00D = {isa = PBXGroup; children = (F2E52C8BB8C4BB2BC3E8A9D1, 4473BA0C4FE10AF0F212BED2, 7A309CD5133156C09B63C7FD, 5F6ECAA6CECBDE9D93A6F66B, DCADC67CA2BBB7CB87211F85, 5F0FDFF7275278957FDA6A37, 47FA53729A4738972DCBBE67, ); path = Voice; sourceTree = "<group>"; };
 		44591BACFA8731837613FE5F = {isa = PBXGroup; children = (226CAD008A2F57252CB9F74C, 4679FAADA51F4812CC8D5326, 6B32ADFC3C6C150E7D7F167F, 7714842F28CB6736F04552E3, 300189DAF0A83BF24F36209E, 796ABE6887FD9D0671C9F499, 1EC5A455721CA5F045467D55, ); path = App; sourceTree = "<group>"; };
 		44F31378CBA7A90EF5921547 = {isa = PBXGroup; children = (6DA1E8B0208B10665ADBBF9E, 1FE2D47B4B7DB189095EDBB3, 1D70B0126CC2712D010F392C, ); path = Workflow; sourceTree = "<group>"; };
 		4599C0F21D98BEFCB65088AB = {isa = PBXGroup; children = (1911DD300B90C4190D3ED441, ); name = Packages; sourceTree = "<group>"; };
 		57B38A60BDF3687FE4FD3220 = {isa = PBXGroup; children = (7B55206EDC3B66A30574E940, BC0A1E2475C260F1CD507903, 97AF20C17427A7634A5217FC, FE928798F5FB4717D4C728E4, D6E0A02FA8E1DAFC5AA50B30, ); path = Resources; sourceTree = "<group>"; };
-		7DA6DEB9D2F38FA0FDE1CC19 = {isa = PBXGroup; children = (8F0E4630AECD89F52D4C983A, CAC8BEF6867FD8D96198AC79, 84269761834C6B3F3C1C14F7, DA780560180752A282F62EEC, DF74984B7FEF4D5A061B3F9F, 8BE4AE9BFD8EB28AB1EAF94D, F2D74C93A99C2CA25CF8A520, 44F31378CBA7A90EF5921547, ); path = Features; sourceTree = "<group>"; };
+		7DA6DEB9D2F38FA0FDE1CC19 = {isa = PBXGroup; children = (8F0E4630AECD89F52D4C983A, CAC8BEF6867FD8D96198AC79, 84269761834C6B3F3C1C14F7, DA780560180752A282F62EEC, DF74984B7FEF4D5A061B3F9F, 8BE4AE9BFD8EB28AB1EAF94D, F2D74C93A99C2CA25CF8A520, 430F50A14E9824AE6AF2E00D, 44F31378CBA7A90EF5921547, ); path = Features; sourceTree = "<group>"; };
 		84269761834C6B3F3C1C14F7 = {isa = PBXGroup; children = (CCE502C825D93DF4732002BE, B8364FE0089C3351EC5B32B5, B6090A9043C0C987D9B8BC00, ); path = Jobs; sourceTree = "<group>"; };
 		88427A1B1B4BBADDE600D482 = {isa = PBXGroup; children = (A95520E097A89862266E4571, 874B38AF95D88EB1F0983919, 3280A7A68CEC44EEB52F8181, ); path = Config; sourceTree = "<group>"; };
 		8BE4AE9BFD8EB28AB1EAF94D = {isa = PBXGroup; children = (96417D46F32108A6D6AB7218, 82C460D247F8E3463C0761B5, ); path = Onboarding; sourceTree = "<group>"; };
@@ -151,11 +167,11 @@
 
 /* Begin PBXNativeTarget section */
 		ACB3EA73EC1B51B4527A2AE4 = {isa = PBXNativeTarget; buildConfigurationList = 92EB79E705C3F3F008F2526C; buildPhases = (497C8016E9C79330D8D86E68, 929B4F3ADEE074A2048A5C9B, B28252ECF9E387918ED61780, ); buildRules = ( ); dependencies = (8BDE93B2447E97D38EEFCECB, ); name = HappyDriveUITests; productName = HappyDriveUITests; productReference = C43EE89E2265FE6CF5996C9E; productType = "com.apple.product-type.bundle.ui-testing"; };
-		B8ECD5F160A9E53E210A0A5E = {isa = PBXNativeTarget; buildConfigurationList = C57B8E19E49BC7C33EC0693D; buildPhases = (E3270F6F9CA8B971B50AD880, BB33686D42DB52E6DE14D89D, 9558662E3E69AE860271A4F4, ); buildRules = ( ); dependencies = ( ); name = HappyDrive; packageProductDependencies = (510C57A19C2E2CC95879912E, ); productName = HappyDrive; productReference = 00D2D5AC78A613D5FFD6EB4F; productType = "com.apple.product-type.application"; };
+		B8ECD5F160A9E53E210A0A5E = {isa = PBXNativeTarget; buildConfigurationList = C57B8E19E49BC7C33EC0693D; buildPhases = (E3270F6F9CA8B971B50AD880, BB33686D42DB52E6DE14D89D, 9558662E3E69AE860271A4F4, ); buildRules = ( ); dependencies = ( ); name = HappyDrive; packageProductDependencies = (510C57A19C2E2CC95879912E, 20BBECF369D3B33C2BDDE127, ); productName = HappyDrive; productReference = 00D2D5AC78A613D5FFD6EB4F; productType = "com.apple.product-type.application"; };
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		591E547634363047B3AFFBC5 = {isa = PBXProject; attributes = { BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1600; LastUpgradeCheck = 1600; TargetAttributes = { B8ECD5F160A9E53E210A0A5E = { CreatedOnToolsVersion = 16.0; }; ACB3EA73EC1B51B4527A2AE4 = { CreatedOnToolsVersion = 16.0; TestTargetID = B8ECD5F160A9E53E210A0A5E; }; }; }; buildConfigurationList = 887D4B5F61EA6AAAF609F3AC; compatibilityVersion = "Xcode 14.0"; developmentRegion = ja; hasScannedForEncodings = 0; knownRegions = (ja, Base, ); mainGroup = ECAC025C821625377FF8A023; productRefGroup = C863DA5204F95EC573510473; projectDirPath = ""; projectRoot = ""; targets = (B8ECD5F160A9E53E210A0A5E, ACB3EA73EC1B51B4527A2AE4, ); };
+		591E547634363047B3AFFBC5 = {isa = PBXProject; attributes = { BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1600; LastUpgradeCheck = 1600; TargetAttributes = { B8ECD5F160A9E53E210A0A5E = { CreatedOnToolsVersion = 16.0; }; ACB3EA73EC1B51B4527A2AE4 = { CreatedOnToolsVersion = 16.0; TestTargetID = B8ECD5F160A9E53E210A0A5E; }; }; }; buildConfigurationList = 887D4B5F61EA6AAAF609F3AC; compatibilityVersion = "Xcode 14.0"; developmentRegion = ja; hasScannedForEncodings = 0; knownRegions = (ja, Base, ); mainGroup = ECAC025C821625377FF8A023; packageReferences = (E123233B4F3ABE2370F25CAA, ); productRefGroup = C863DA5204F95EC573510473; projectDirPath = ""; projectRoot = ""; targets = (B8ECD5F160A9E53E210A0A5E, ACB3EA73EC1B51B4527A2AE4, ); };
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -165,7 +181,7 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		497C8016E9C79330D8D86E68 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (15C44E44B65CAF046BF2B290, ); runOnlyForDeploymentPostprocessing = 0; };
-		E3270F6F9CA8B971B50AD880 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (152316C8B7677C01E6B0EA78, 768120BC66FF717C4C790026, 606B2FA74A6C3403C80DBBA6, 039F31E886390170CC6D7406, D4D218ECD2D4634DB9EBF4A0, B7BDE7123B2A11E251EF16E1, 07D4789C749EF7E9DFAFB357, 936362F0247DBF1BF7BD20EB, 6C57D1313AA436F8D8A23CBB, 12D198E4E079F758CF495033, 7FD7203FDD1861EE8DAD4621, CAA31AB673CA67FAF4C0B500, E4FD0732FF3211EAEAC6AF31, 0FEBA6D3E29857AE238C3587, D1458990671DD5F827F4AC65, 75220CA73FE8123FE44E80CE, D5A7DE7113F22D02B52F67B8, F76E4E71E35CA750B55AC22C, E4E7A5046D3D8DCAA5E6311E, 2119ECD2D41C3D154F73AF9A, 5B4DFB77ED44F713F60711C7, 8C392C11ADC5B9A5AFB78673, 24FD82A8A3419C8D9F67EF84, 294D30456192F4A39525218B, D2710BE82853250C499A424E, AF781C4BC35ED6196F89288E, E68239A70BE68955FB8980D4, A4493F7D4EE1FEB8CE6F239C, 9517C772C4369A7BBC40EA25, E17A04F65A60D61917E648D8, 9FC3B8D9504996635EED2225, A352A58A24A7F7B9105B10E9, A4FB9249BC258A567C3CD508, 1A1B73EEA6F4D1BF8883EE17, 6BD4FFAACF88767401331B5E, DBB32B54E96710495DB92DC1, 3CD0240AF702EF32180DFCBE, FD08365629F2FDA9760D7637, 1F32225C72F6EEA8190573B5, ); runOnlyForDeploymentPostprocessing = 0; };
+		E3270F6F9CA8B971B50AD880 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (152316C8B7677C01E6B0EA78, 768120BC66FF717C4C790026, 606B2FA74A6C3403C80DBBA6, 039F31E886390170CC6D7406, D4D218ECD2D4634DB9EBF4A0, B7BDE7123B2A11E251EF16E1, 07D4789C749EF7E9DFAFB357, 936362F0247DBF1BF7BD20EB, 6C57D1313AA436F8D8A23CBB, 12D198E4E079F758CF495033, 7FD7203FDD1861EE8DAD4621, CAA31AB673CA67FAF4C0B500, E4FD0732FF3211EAEAC6AF31, 0FEBA6D3E29857AE238C3587, D1458990671DD5F827F4AC65, 75220CA73FE8123FE44E80CE, D5A7DE7113F22D02B52F67B8, F76E4E71E35CA750B55AC22C, E4E7A5046D3D8DCAA5E6311E, 2119ECD2D41C3D154F73AF9A, 5B4DFB77ED44F713F60711C7, 8C392C11ADC5B9A5AFB78673, 24FD82A8A3419C8D9F67EF84, 294D30456192F4A39525218B, D2710BE82853250C499A424E, AF781C4BC35ED6196F89288E, E68239A70BE68955FB8980D4, A4493F7D4EE1FEB8CE6F239C, 9517C772C4369A7BBC40EA25, E17A04F65A60D61917E648D8, 9FC3B8D9504996635EED2225, 3A61651563DA74736D7DF0EF, F985C0393B1D7C4B2121EF2A, ADDB33F1B0BF247ED403AB48, E4B4064A1115F3F76093AACB, 3ADE960B71995416E95EE7FB, 882A887A569499154AE64012, FA63ABE7D96DCB20EC4724A5, A352A58A24A7F7B9105B10E9, A4FB9249BC258A567C3CD508, 1A1B73EEA6F4D1BF8883EE17, 6BD4FFAACF88767401331B5E, DBB32B54E96710495DB92DC1, 3CD0240AF702EF32180DFCBE, FD08365629F2FDA9760D7637, 1F32225C72F6EEA8190573B5, ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -191,7 +207,12 @@
 		C57B8E19E49BC7C33EC0693D = {isa = XCConfigurationList; buildConfigurations = (F81D34D9EA971A5EDC4B315B, 7087FCF1AD3F987A6F30C332, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		E123233B4F3ABE2370F25CAA = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/stasel/WebRTC"; requirement = { kind = upToNextMajorVersion; minimumVersion = 153.0.0; }; };
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		20BBECF369D3B33C2BDDE127 = {isa = XCSwiftPackageProductDependency; package = E123233B4F3ABE2370F25CAA; productName = WebRTC; };
 		510C57A19C2E2CC95879912E = {isa = XCSwiftPackageProductDependency; productName = HappyDriveCore; };
 /* End XCSwiftPackageProductDependency section */
 

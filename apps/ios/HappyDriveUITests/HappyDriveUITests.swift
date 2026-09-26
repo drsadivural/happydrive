@@ -105,4 +105,46 @@ final class HappyDriveUITests: XCTestCase {
         earnings.tap()
         XCTAssertTrue(app.navigationBars["報酬・振込履歴"].waitForExistence(timeout: 10))
     }
+
+    /// ホームの「音声で話す」から AIアシスタントを開き、見出し・操作ボタンを確認する。
+    /// バックエンドに OPENAI_API_KEY が無い環境では voice_unavailable となり「もう一度試す」が出ることを確認する。
+    func testVoiceAssistantOpensFromHome() throws {
+        let homeTab = app.tabBars.buttons["ホーム"]
+        XCTAssertTrue(homeTab.waitForExistence(timeout: 20))
+        homeTab.tap()
+        let launch = app.buttons["voiceAssistantButton"]
+        XCTAssertTrue(launch.waitForExistence(timeout: 10), "ホームに「音声で話す」ボタンがありません")
+        launch.tap()
+        app.tap() // マイク許可ダイアログ用（addUIInterruptionMonitor を発火させる）
+
+        XCTAssertTrue(app.staticTexts["HappyDrive AIアシスタント"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["voiceCloseButton"].exists)
+        XCTAssertTrue(app.buttons["voiceMuteButton"].exists)
+        XCTAssertTrue(app.buttons["voiceSpeakerButton"].exists)
+        XCTAssertTrue(app.buttons["voiceKeyboardButton"].exists)
+
+        let end = app.buttons["voiceEndButton"]
+        let retry = app.buttons["voiceRetryButton"]
+        let micActive = app.staticTexts["マイク使用中"]
+        let deadline = Date().addingTimeInterval(25)
+        while Date() < deadline && !retry.exists && !micActive.exists {
+            sleep(1)
+        }
+        if retry.exists {
+            // 音声機能が無効な環境（voice_unavailable 等）ではエラーと「もう一度試す」を表示する
+            XCTAssertTrue(app.otherElements["voiceErrorNotice"].exists || app.staticTexts["接続できませんでした"].exists || app.staticTexts["現在ご利用いただけません"].exists)
+        } else {
+            // 接続できた環境：マイクのオン/オフを切り替えられ、終了できる
+            let mute = app.buttons["voiceMuteButton"]
+            mute.tap()
+            XCTAssertEqual(mute.value as? String, "オフ")
+            mute.tap()
+            XCTAssertEqual(mute.value as? String, "オン")
+            XCTAssertTrue(end.exists)
+            end.tap()
+            XCTAssertTrue(app.buttons["voiceRestartButton"].waitForExistence(timeout: 5))
+        }
+        app.buttons["voiceCloseButton"].tap()
+        XCTAssertTrue(launch.waitForExistence(timeout: 5))
+    }
 }

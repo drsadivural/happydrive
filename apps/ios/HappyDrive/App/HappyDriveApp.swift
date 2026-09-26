@@ -43,6 +43,8 @@ struct HappyDriveApp: App {
             case .background:
                 // バックグラウンドでは位置を取得しない（When In Use のみ）ため共有を止める
                 env.locationSharing.pause()
+                // バックグラウンドでマイクを使い続けない（UIBackgroundModes audio は使わない）
+                env.voice.handleEnteredBackground()
             default:
                 break
             }

@@ -25,6 +25,7 @@ apps/ios/
 │   │   ├── Workflow/            # 業務を進める・チェックイン・手順・完了報告・評価・メッセージ
 │   │   ├── Learning/            # 講習・確認テスト・資格期限
 │   │   ├── MyPage/              # 報酬・振込・実績・資格・通知・設定・権限・サポート・退会
+│   │   ├── Voice/               # AIアシスタント（WebRTC による音声会話・文字入力）
 │   │   └── Shared/              # 写真添付（EXIF除去）・受領サイン（PencilKit）
 │   ├── Resources/               # Assets（AppIcon 仮・ワードマーク）・Noto Sans JP・PrivacyInfo・文字列
 │   ├── Supporting/              # Info.plist（Release）/ Info-Debug.plist（生成）/ entitlements
@@ -38,7 +39,8 @@ apps/ios/
 │   │   ├── Storage/             # AES-GCM 暗号化ストア（今日の配送キャッシュ・キュー）
 │   │   ├── CSV/                 # CSV 解析/生成・配送先 CSV の事前検証・住所の重複判定
 │   │   ├── Formatting/          # JST 日時・円・所要時間・状態ラベル（日本語）
-│   │   └── Logic/               # 登録手順・業務進行・受諾失敗の扱い・チェックイン判定・運転中判定・ルート要約
+│   │   ├── Logic/               # 登録手順・業務進行・受諾失敗の扱い・チェックイン判定・運転中判定・ルート要約
+│   │   └── Voice/               # 音声アシスタントの状態遷移・イベント解析・ツール・指標
 │   └── Tests/HappyDriveCoreTests/  # XCTest（契約どおりのサンプル JSON を含む）
 ├── scripts/gen_xcodeproj.py
 └── TEST_RESULTS.md
@@ -48,7 +50,7 @@ apps/ios/
 
 ## Xcode で開く・ビルドする（Xcode 16 以降）
 
-1. `apps/ios/HappyDrive.xcodeproj` を開く（ローカルパッケージ `HappyDriveCore` と依存する `swift-crypto` が自動で解決されます。初回はネットワークが必要）。
+1. `apps/ios/HappyDrive.xcodeproj` を開く（ローカルパッケージ `HappyDriveCore` と依存する `swift-crypto`、音声アシスタント用の `WebRTC` が自動で解決されます。初回はネットワークが必要）。
 2. Signing & Capabilities で Team を選ぶ（`Config/Shared.xcconfig` の `DEVELOPMENT_TEAM` に設定しても可）。Bundle ID は `jp.happydrive.driver`。
 3. スキーム `HappyDrive` / シミュレータ（iPhone, iOS 17 以降）で Run。
 
@@ -120,6 +122,57 @@ Linux では Swift 6.1 以降（Ubuntu は `sudo apt-get install swiftlang` ま�
 | 業務 | `GET /assignments`, `GET /assignments/{id}`, `POST /assignments/{id}/events`（キュー経由）, `POST /assignments/{id}/location`, `POST /assignments/{id}/rating`, `GET/POST /assignments/{id}/messages` |
 | 学ぶ | `GET /learning/courses`, `GET /learning/courses/{id}`, `POST /learning/courses/{id}/attempts` |
 | マイページ | `GET /earnings/summary`, `GET /earnings`, `GET /payouts`, `GET /notifications`, `POST /notifications/read`, `GET /skills/catalog`, `POST /me/skills`, `PUT /me/preferences`, `PATCH /me`, `GET/POST /support/tickets`, `DELETE /me`（confirm=false → true の 2 段階）, `POST/DELETE /me/devices` |
+
+## リアルタイム音声（AIアシスタント）
+
+ホームの「音声で話す」ボタン（またはマイページ →「AIアシスタント（音声で話す）」）から、**HappyDrive AIアシスタント**と日本語で会話できます。音声が主で、同じ会話の中で文字入力（キーボード）も使えます。
+
+### しくみ
+
+```
+アプリ ──POST /voice/realtime-session（Bearer）──▶ HappyDrive API ──▶ OpenAI（一時キーを発行。指示文・声・VAD・ツールはサーバー側で設定）
+アプリ ──SDP offer（Bearer 一時キー, application/sdp）──▶ callUrl（OpenAI Realtime / WebRTC）
+アプリ ◀══ 音声（WebRTC）＋ データチャネル "oai-events"（JSON イベント）══▶ OpenAI
+アプリ ──ツール呼び出し──▶ 既存の HappyDrive API（本人の権限で読み取りのみ）
+アプリ ──POST /voice/sessions/{id}/end（品質指標のみ・本文なし）──▶ HappyDrive API
+```
+
+| 層 | 場所 | 内容 |
+|---|---|---|
+| 純粋ロジック（Linux でテスト） | `HappyDriveCore/Sources/HappyDriveCore/Voice/` | `VoiceConfiguration`（再接続は最大3回・0.5秒起点の指数バックオフ＋ジッター・上限8秒、接続タイムアウト15秒、ツール8秒、アイドル/最大時間はサーバー値で上書き）、`VoiceStateMachine`（状態遷移）、`VoiceError`（日本語メッセージ・API エラーの変換）、`RealtimeEventParser` / `RealtimeClientEvent`（型付きのイベント解析・Encodable での送信）、`TranscriptAssembler`（差分の組み立て・割り込み）、`RealtimeTurnTracker`（バージイン・ツール結果の返送と続きの応答を1回だけ）、`VoiceToolDispatcher`（許可リスト×サーバー有効ツール、引数検証、タイムアウト、既存 API のみ）、`VoiceMetricsRecorder`（P50/P95）、`HappyDriveAPI.createVoiceSession` / `endVoiceSession` |
+| アプリ | `HappyDrive/Features/Voice/` | `WebRTCClient`（音声のみの PeerConnection・データチャネル・SDP 交換・後片付け）、`AudioSessionManager`（`.playAndRecord` + `.voiceChat` でエコーキャンセル、Bluetooth は HFP のみ、スピーカー/受話口、割り込み・経路変更・メディアサービス再起動の監視、RTCAudioSession は手動モード）、`RealtimeVoiceService`（全体の進行）、画面（`VoiceConversationView` / `VoiceOrbView` / `VoiceTranscriptView` / `VoiceControlsView`） |
+
+- **依存**：WebRTC は Swift Package `https://github.com/stasel/WebRTC`（153.0.0 以上の同メジャー、バイナリ xcframework）。アプリ本体のみにリンクし、`HappyDriveCore` には入れません（Linux のテストに影響しない）。`scripts/gen_xcodeproj.py` の `REMOTE_PACKAGES` と `project.yml` で定義。
+- **割り込み（バージイン）**：サーバー VAD（semantic_vad・interrupt_response）に加えて、回答の再生中に利用者が話し始めたら端末から `output_audio_buffer.clear`（応答中なら `response.cancel` も）を送り、その回答に「途中で止めました」を付けます。停止までの時間を指標に記録します。
+- **ツール**：`get_today_overview` / `list_delivery_stops` / `search_jobs` / `get_job_details` / `list_my_assignments` / `get_earnings_summary` / `list_unread_notifications`。端末の許可リストとサーバーが返す `tools` の両方にあるものだけ実行し、引数（日付 YYYY-MM-DD、月 YYYY-MM、UUID、列挙値）を検証してから既存の API を呼びます。不正な引数・未知のツールは実行せず `{"error":{"code","message"}}` を返します。受取人の氏名・電話・正確な位置はモデルに渡しません。
+- **文字入力**：キーボードに切り替えると、文字はデータチャネルの `conversation.item.create`（input_text）で送り、応答は文字だけ（`output_modalities: ["text"]`）を求めます。文字入力中はマイクをオフにします。
+- **会話記録**：`AppEnvironment.voice` がメモリ上だけに保持します（端末・サーバーに保存せず、音声も保存しません）。画面を閉じて開き直したときや再接続したときは、直近 12 発話を会話に入れ直して文脈を引き継ぎます。ログアウト・退会で消去します。
+- **終了**：終了ボタン・画面を閉じる・アイドル（双方の発話なし、既定 120 秒）・最大時間（既定 900 秒）・アプリのバックグラウンド移行・電話などの音声割り込み。バックグラウンドでは音声を使いません（`UIBackgroundModes` の audio は使用しない）。
+- **再接続**：通信断（NWPathMonitor）・ICE の失敗/切断（3 秒の猶予）・データチャネルの切断で、新しい一時キーを取得して最大 3 回まで再接続し、文脈を入れ直します。
+- **秘密情報**：一時キー（clientSecret）はメモリ上で接続にだけ使い、保存・ログ出力しません（`VoiceSession` の description も伏せ字）。ログには会話の本文を出しません。
+- **権限**：マイク（`NSMicrophoneUsageDescription`「AIアシスタントとの音声会話にマイクを使用します。」）。許可ダイアログは未確認のときだけ表示します。拒否されている場合は説明と「設定を開く」を表示し、文字入力で会話を続けられます。`PrivacyInfo.xcprivacy` に「音声データ（ユーザーに紐付けない・トラッキングなし・アプリの機能）」を追加しました。
+
+### テスト
+
+- `swift test --package-path apps/ios/HappyDriveCore`：状態遷移（割り込み・再接続・上限到達・終了）、全イベントの解析（未知・不正 JSON を含む）、送信 JSON、文字起こしの組み立て（差分・交互・割り込み・文脈）、ツール（許可リスト・未知・不正な引数・型違い・タイムアウト・成功時の API 呼び出しと要約）、エラーの変換、再接続の待ち時間（上限・ジッターの範囲）、指標のパーセンタイル、`VoiceSession` のデコード。
+- UI テスト `testVoiceAssistantOpensFromHome`（`HD_UITEST_API` 設定時のみ）：ホームから開き、見出し・閉じる・マイク・スピーカー・文字入力・終了を確認。API が `voice_unavailable` を返す環境では「もう一度試す」が出ることを確認。
+
+### 実機での確認手順（未実施）
+
+> **実際の音声・割り込み・エコーの挙動は、iPhone 実機と、API 側に `OPENAI_API_KEY` を設定した環境が必要です。この実装では実機での確認を一度も行っていません。** シミュレータではマイク・エコーキャンセル・Bluetooth の挙動が実機と異なります。
+
+1. 通常の速さ・早口・長い発話（30 秒以上）で、文字起こしと回答が崩れないこと
+2. 回答中に話しかけて、すぐに音声が止まり「途中で止めました」が付くこと（連続で何度か）
+3. 人名・数字・日付・金額・住所（例「9月28日の10時から」「1万2千円」「横浜市中区山下町1-2-3」）の聞き取りと読み上げ
+4. 静かな場所・騒がしい場所（車内・道路沿い）・音楽を流しながら
+5. スピーカー / 受話口の切り替え、AirPods・Bluetooth ヘッドセット・車の Bluetooth（HFP）への切り替えと切断
+6. 会話中の圏外 → 復帰（「再接続中…」→ 文脈を保って再開、3 回失敗で「通信が切れました」）
+7. Wi-Fi ↔ モバイル通信の切り替え
+8. 会話中の電話着信（会話が終了し、案内が出ること）
+9. バックグラウンド → 復帰（マイクが止まり、再度開くと文脈が続くこと）
+10. 画面の開閉を繰り返してもマイクが残らない・二重に接続しないこと（コントロールセンターのマイク使用表示を確認）
+11. マイク拒否 → 説明と「設定を開く」、文字入力での会話
+12. 「今日の予定は？」「近くの案件を探して」「今月の報酬は？」「未読のお知らせは？」でツールが呼ばれ、正しい内容を答えること
 
 ## 審査用アカウントについて
 

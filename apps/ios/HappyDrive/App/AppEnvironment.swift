@@ -17,6 +17,8 @@ final class AppEnvironment {
     let session: SessionStore
     let router = AppRouter()
     let locationSharing: LocationSharingController
+    /// AIアシスタントの音声会話（会話記録はアプリの起動中だけメモリに保持）
+    let voice: RealtimeVoiceService
 
     /// 送信待ちの操作（配送・業務イベント）
     private(set) var pendingMutations: [PendingMutation] = []
@@ -50,6 +52,11 @@ final class AppEnvironment {
         self.deliveryCache = DeliveryCache(url: support.appendingPathComponent("delivery-today.bin"), sealer: sealer)
         self.session = SessionStore(api: api)
         self.locationSharing = LocationSharingController(api: api, location: location)
+        self.voice = RealtimeVoiceService(api: api, network: network, location: { @MainActor [weak location] in
+            // 位置が許可されている場合のみ、近くの案件検索におおよその位置を使う
+            guard let location, location.isAuthorized, let loc = await location.currentLocation(maxAge: 300) else { return nil }
+            return GeoPoint(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
+        })
 
         sessionBox.handler = { [weak session = self.session] event in
             if event == .expired { session?.handleSessionExpired() }
@@ -121,6 +128,7 @@ final class AppEnvironment {
     /// 端末の一時データを消去（送信待ちの操作・配送キャッシュ・位置共有）
     func clearLocalData() async {
         locationSharing.stop()
+        voice.reset()
         await queue.removeAll()
         deliveryCache.clear()
         droppedMutations.removeAll()

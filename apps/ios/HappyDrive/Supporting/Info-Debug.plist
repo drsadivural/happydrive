@@ -59,6 +59,8 @@
 	<string>配達・業務の証跡写真、本人確認書類・資格証の撮影、伝票からの住所の読み取り（端末内で処理）に使用します。</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>近くの案件の検索、配送中の安全のための走行判定（運転中の操作抑止）、業務中のチェックインと発注者への位置の限定共有（最新の1点のみ）に使用します。アプリを使用していない間は取得しません。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AIアシスタントとの音声会話にマイクを使用します。</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>NotoSansJP-VF.ttf</string>

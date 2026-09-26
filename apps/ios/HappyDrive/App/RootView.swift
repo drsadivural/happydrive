@@ -97,6 +97,9 @@ struct MainTabView: View {
         .safeAreaInset(edge: .top, spacing: 0) {
             OfflineBanner(isOnline: env.network.isOnline, pendingCount: env.pendingMutations.count)
         }
+        .fullScreenCover(isPresented: $router.isVoiceAssistantPresented) {
+            VoiceConversationView()
+        }
     }
 }
 

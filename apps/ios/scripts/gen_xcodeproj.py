@@ -3,6 +3,7 @@
 
 - HappyDrive/ と HappyDriveUITests/ 以下のファイルを走査し、全ソース・リソースを参照する project.pbxproj を出力
 - ローカル Swift パッケージ HappyDriveCore をフォルダ参照 + XCSwiftPackageProductDependency で接続
+- リモート Swift パッケージ（WebRTC：音声アシスタント用、アプリ本体のみ）を XCRemoteSwiftPackageReference で接続
 - オブジェクト ID はパスから決定的に生成（再実行しても差分が出ない）
 - Debug 用 Info-Debug.plist（localhost のみ HTTP 許可）を Info.plist から生成
 - 共有スキーム HappyDrive.xcscheme を出力
@@ -23,6 +24,13 @@ APP_DIR = "HappyDrive"
 UITEST_DIR = "HappyDriveUITests"
 PACKAGE_DIR = "HappyDriveCore"
 CONFIG_DIR = "Config"
+
+# アプリ本体だけが使うリモート Swift パッケージ（HappyDriveCore には入れない＝Linux のテストに影響しない）
+# (識別名, リポジトリ URL, 最小バージョン, プロダクト名)
+REMOTE_PACKAGES = [
+    # WebRTC（Google libwebrtc のバイナリ xcframework 配布。OpenAI Realtime への音声接続に使用）
+    ("WebRTC", "https://github.com/stasel/WebRTC", "153.0.0", "WebRTC"),
+]
 
 # Info.plist 等はビルド設定で参照するためリソースに含めない
 NON_RESOURCE_FILES = {"Info.plist", "Info-Debug.plist", "HappyDrive.entitlements"}
@@ -203,6 +211,23 @@ def main() -> int:
     core_bf = oid("buildfile", "frameworks", core_dep)
     add(core_bf, f"{{isa = PBXBuildFile; productRef = {core_dep}; }};")
 
+    remote_refs: list[str] = []
+    remote_deps: list[str] = []
+    remote_bfs: list[str] = []
+    for ident, url, minimum, product in REMOTE_PACKAGES:
+        ref = oid("remote-package", ident)
+        add(ref, (
+            f"{{isa = XCRemoteSwiftPackageReference; repositoryURL = {quote(url)}; "
+            f"requirement = {{ kind = upToNextMajorVersion; minimumVersion = {minimum}; }}; }};"
+        ))
+        dep_id = oid("package-product", ident, product)
+        add(dep_id, f"{{isa = XCSwiftPackageProductDependency; package = {ref}; productName = {product}; }};")
+        bf = oid("buildfile", "frameworks", dep_id)
+        add(bf, f"{{isa = PBXBuildFile; productRef = {dep_id}; }};")
+        remote_refs.append(ref)
+        remote_deps.append(dep_id)
+        remote_bfs.append(bf)
+
     # ビルドフェーズ
     def phase(isa: str, key: str, files: list[str]) -> str:
         pid = oid("phase", key)
@@ -211,7 +236,7 @@ def main() -> int:
 
     app_src_phase = phase("PBXSourcesBuildPhase", "app-sources", app_source_bfs)
     app_res_phase = phase("PBXResourcesBuildPhase", "app-resources", app_resource_bfs)
-    app_fw_phase = phase("PBXFrameworksBuildPhase", "app-frameworks", [core_bf])
+    app_fw_phase = phase("PBXFrameworksBuildPhase", "app-frameworks", [core_bf] + remote_bfs)
     test_src_phase = phase("PBXSourcesBuildPhase", "test-sources", test_source_bfs)
     test_res_phase = phase("PBXResourcesBuildPhase", "test-resources", [])
     test_fw_phase = phase("PBXFrameworksBuildPhase", "test-frameworks", [])
@@ -304,7 +329,7 @@ def main() -> int:
 
     add(app_target, (
         f"{{isa = PBXNativeTarget; buildConfigurationList = {app_cfgs}; buildPhases = ({app_src_phase}, {app_fw_phase}, {app_res_phase}, ); "
-        f"buildRules = ( ); dependencies = ( ); name = HappyDrive; packageProductDependencies = ({core_dep}, ); "
+        f"buildRules = ( ); dependencies = ( ); name = HappyDrive; packageProductDependencies = ({', '.join([core_dep] + remote_deps)}, ); "
         f"productName = HappyDrive; productReference = {app_product}; productType = \"com.apple.product-type.application\"; }};"
     ))
     add(test_target, (
@@ -317,7 +342,9 @@ def main() -> int:
         "{isa = PBXProject; attributes = { BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1600; LastUpgradeCheck = 1600; "
         f"TargetAttributes = {{ {app_target} = {{ CreatedOnToolsVersion = 16.0; }}; {test_target} = {{ CreatedOnToolsVersion = 16.0; TestTargetID = {app_target}; }}; }}; }}; "
         f"buildConfigurationList = {project_cfgs}; compatibilityVersion = \"Xcode 14.0\"; developmentRegion = ja; hasScannedForEncodings = 0; "
-        f"knownRegions = (ja, Base, ); mainGroup = {main_group.id}; productRefGroup = {products_group.id}; projectDirPath = \"\"; projectRoot = \"\"; "
+        f"knownRegions = (ja, Base, ); mainGroup = {main_group.id}; "
+        f"packageReferences = ({''.join(r + ', ' for r in remote_refs)}); "
+        f"productRefGroup = {products_group.id}; projectDirPath = \"\"; projectRoot = \"\"; "
         f"targets = ({app_target}, {test_target}, ); }};"
     ))
 

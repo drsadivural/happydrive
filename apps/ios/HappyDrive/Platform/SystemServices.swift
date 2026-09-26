@@ -12,6 +12,8 @@ enum HDLog {
     static let api = Logger(subsystem: "jp.happydrive.driver", category: "api")
     static let sync = Logger(subsystem: "jp.happydrive.driver", category: "sync")
     static let location = Logger(subsystem: "jp.happydrive.driver", category: "location")
+    /// 音声アシスタント。一時キー・会話の本文・音声は出力しない
+    static let voice = Logger(subsystem: "jp.happydrive.driver", category: "voice")
 
     static func error(_ logger: Logger, _ context: String, _ error: Error) {
         if let api = error as? APIError {
@@ -31,6 +33,12 @@ final class NetworkMonitor {
     @ObservationIgnored private let queue = DispatchQueue(label: "jp.happydrive.network-monitor")
     @ObservationIgnored var onReconnect: (@MainActor () -> Void)?
     @ObservationIgnored private var started = false
+    @ObservationIgnored private var observers: [@MainActor (Bool) -> Void] = []
+
+    /// 接続状態の変化を受け取る（音声会話の切断検知など。onReconnect とは別に複数登録できる）
+    func addObserver(_ observer: @escaping @MainActor (Bool) -> Void) {
+        observers.append(observer)
+    }
 
     func start() {
         guard !started else { return }
@@ -47,6 +55,9 @@ final class NetworkMonitor {
     private func update(online: Bool) {
         let wasOffline = !isOnline
         isOnline = online
+        if online == wasOffline {  // 状態が変わった
+            observers.forEach { $0(online) }
+        }
         if online && wasOffline {
             onReconnect?()
         }
