@@ -1,5 +1,6 @@
 import SwiftUI
 import HappyDriveCore
+import HappyAvatarKit
 
 /// ルート作成の条件（出発時刻・出発地・休憩）を指定してサーバーで推奨ルートを計算する
 struct OptimizeSheet: View {
@@ -122,6 +123,7 @@ struct OptimizeSheet: View {
     }
 
     private func optimize() async {
+        env.voice.handleHappyDriveEvent(.routeRecalculation)
         isWorking = true
         errorMessage = nil
         defer { isWorking = false }

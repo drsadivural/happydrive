@@ -106,7 +106,7 @@ final class HappyDriveUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["報酬・振込履歴"].waitForExistence(timeout: 10))
     }
 
-    /// ホームの「音声で話す」から AIアシスタントを開き、見出し・操作ボタンを確認する。
+    /// ホームの「音声で話す」から AIアシスタントを開き、見出し・操作ボタン・アバター・最小化（ミニアバター）を確認する。
     /// バックエンドに OPENAI_API_KEY が無い環境では voice_unavailable となり「もう一度試す」が出ることを確認する。
     func testVoiceAssistantOpensFromHome() throws {
         let homeTab = app.tabBars.buttons["ホーム"]
@@ -130,6 +130,25 @@ final class HappyDriveUITests: XCTestCase {
         while Date() < deadline && !retry.exists && !micActive.exists {
             sleep(1)
         }
+
+        // アバター（全画面）と小さいスペクトラムを表示する
+        XCTAssertTrue(app.descendants(matching: .any)["voiceAvatar"].exists, "音声画面にアバターがありません")
+        XCTAssertTrue(app.descendants(matching: .any)["voiceSpectrum"].exists || app.buttons["voiceRetryButton"].exists)
+
+        // 最小化：会話を終了せずに閉じ、ミニアバター（マイク表示・終了ボタン付き）を出す。「音声で話す」は隠れる
+        let minimize = app.buttons["voiceMinimizeButton"]
+        XCTAssertTrue(minimize.exists, "「最小化」ボタンがありません")
+        minimize.tap()
+        let mini = app.buttons["voiceMiniAvatar"]
+        XCTAssertTrue(mini.waitForExistence(timeout: 5), "最小化後にミニアバターが表示されません")
+        XCTAssertTrue(app.buttons["voiceMiniEndButton"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["voiceMiniMicIndicator"].exists)
+        XCTAssertFalse(launch.exists, "ミニアバター表示中は「音声で話す」を隠す")
+        // ミニアバターから全画面に戻る（会話は続いている）
+        mini.tap()
+        XCTAssertTrue(app.staticTexts["HappyDrive AIアシスタント"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["voiceMiniAvatar"].exists)
+
         if retry.exists {
             // 音声機能が無効な環境（voice_unavailable 等）ではエラーと「もう一度試す」を表示する
             XCTAssertTrue(app.otherElements["voiceErrorNotice"].exists || app.staticTexts["接続できませんでした"].exists || app.staticTexts["現在ご利用いただけません"].exists)
@@ -146,5 +165,7 @@ final class HappyDriveUITests: XCTestCase {
         }
         app.buttons["voiceCloseButton"].tap()
         XCTAssertTrue(launch.waitForExistence(timeout: 5))
+        // ✕ で閉じたら会話は終わり、ミニアバターは出ない
+        XCTAssertFalse(app.buttons["voiceMiniAvatar"].exists)
     }
 }

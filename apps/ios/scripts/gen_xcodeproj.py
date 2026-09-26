@@ -2,7 +2,7 @@
 """HappyDrive.xcodeproj を生成する（XcodeGen なしで Xcode から開けるようにするため）。
 
 - HappyDrive/ と HappyDriveUITests/ 以下のファイルを走査し、全ソース・リソースを参照する project.pbxproj を出力
-- ローカル Swift パッケージ HappyDriveCore をフォルダ参照 + XCSwiftPackageProductDependency で接続
+- ローカル Swift パッケージ（HappyDriveCore・HappyAvatarKit）をフォルダ参照 + XCSwiftPackageProductDependency で接続
 - リモート Swift パッケージ（WebRTC：音声アシスタント用、アプリ本体のみ）を XCRemoteSwiftPackageReference で接続
 - オブジェクト ID はパスから決定的に生成（再実行しても差分が出ない）
 - Debug 用 Info-Debug.plist（localhost のみ HTTP 許可）を Info.plist から生成
@@ -22,7 +22,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # apps/ios
 PROJECT = os.path.join(ROOT, "HappyDrive.xcodeproj")
 APP_DIR = "HappyDrive"
 UITEST_DIR = "HappyDriveUITests"
-PACKAGE_DIR = "HappyDriveCore"
+# ローカル Swift パッケージ（フォルダ名 = プロダクト名）
+# HappyDriveCore：UI に依存しないロジック（Linux でテスト）／HappyAvatarKit：音声アシスタントのアバター（SwiftUI）
+LOCAL_PACKAGES = ["HappyDriveCore", "HappyAvatarKit"]
 CONFIG_DIR = "Config"
 
 # アプリ本体だけが使うリモート Swift パッケージ（HappyDriveCore には入れない＝Linux のテストに影響しない）
@@ -175,10 +177,11 @@ def main() -> int:
             cfg_group.children.append(add_file(os.path.join(CONFIG_DIR, fn)))
 
     # ローカルパッケージ（フォルダ参照。Xcode が Package.swift を検出してローカルパッケージとして扱う）
-    pkg_ref = oid("package-folder", PACKAGE_DIR)
-    add(pkg_ref, f"{{isa = PBXFileReference; lastKnownFileType = folder; path = {PACKAGE_DIR}; sourceTree = SOURCE_ROOT; }};")
     packages_group = Group("Packages", None, oid("group", "Packages"))
-    packages_group.children.append(pkg_ref)
+    for package_dir in LOCAL_PACKAGES:
+        pkg_ref = oid("package-folder", package_dir)
+        add(pkg_ref, f"{{isa = PBXFileReference; lastKnownFileType = folder; path = {package_dir}; sourceTree = SOURCE_ROOT; }};")
+        packages_group.children.append(pkg_ref)
 
     readme_ref = add_file("README.md")
 
@@ -206,10 +209,15 @@ def main() -> int:
     app_resource_bfs = build_files(app_resources, "app-resources")
     test_source_bfs = build_files(test_sources, "test-sources")
 
-    core_dep = oid("package-product", "HappyDriveCore")
-    add(core_dep, "{isa = XCSwiftPackageProductDependency; productName = HappyDriveCore; };")
-    core_bf = oid("buildfile", "frameworks", core_dep)
-    add(core_bf, f"{{isa = PBXBuildFile; productRef = {core_dep}; }};")
+    local_deps: list[str] = []
+    local_bfs: list[str] = []
+    for product in LOCAL_PACKAGES:
+        dep_id = oid("package-product", product)
+        add(dep_id, f"{{isa = XCSwiftPackageProductDependency; productName = {product}; }};")
+        bf = oid("buildfile", "frameworks", dep_id)
+        add(bf, f"{{isa = PBXBuildFile; productRef = {dep_id}; }};")
+        local_deps.append(dep_id)
+        local_bfs.append(bf)
 
     remote_refs: list[str] = []
     remote_deps: list[str] = []
@@ -236,7 +244,7 @@ def main() -> int:
 
     app_src_phase = phase("PBXSourcesBuildPhase", "app-sources", app_source_bfs)
     app_res_phase = phase("PBXResourcesBuildPhase", "app-resources", app_resource_bfs)
-    app_fw_phase = phase("PBXFrameworksBuildPhase", "app-frameworks", [core_bf] + remote_bfs)
+    app_fw_phase = phase("PBXFrameworksBuildPhase", "app-frameworks", local_bfs + remote_bfs)
     test_src_phase = phase("PBXSourcesBuildPhase", "test-sources", test_source_bfs)
     test_res_phase = phase("PBXResourcesBuildPhase", "test-resources", [])
     test_fw_phase = phase("PBXFrameworksBuildPhase", "test-frameworks", [])
@@ -329,7 +337,7 @@ def main() -> int:
 
     add(app_target, (
         f"{{isa = PBXNativeTarget; buildConfigurationList = {app_cfgs}; buildPhases = ({app_src_phase}, {app_fw_phase}, {app_res_phase}, ); "
-        f"buildRules = ( ); dependencies = ( ); name = HappyDrive; packageProductDependencies = ({', '.join([core_dep] + remote_deps)}, ); "
+        f"buildRules = ( ); dependencies = ( ); name = HappyDrive; packageProductDependencies = ({', '.join(local_deps + remote_deps)}, ); "
         f"productName = HappyDrive; productReference = {app_product}; productType = \"com.apple.product-type.application\"; }};"
     ))
     add(test_target, (

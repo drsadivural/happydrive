@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import HappyDriveCore
+import HappyAvatarKit
 
 @Observable
 @MainActor
@@ -14,6 +15,8 @@ final class DeliveryViewModel {
     /// オフラインでキャッシュを表示している場合の保存時刻
     private(set) var cachedAt: Date?
     var busyMessage: String?
+    /// 運行中に次の配送先へ近づいたことを 1 配送先につき 1 回だけ音声アシスタントのアバターへ伝える
+    @ObservationIgnored private var approachTracker = DestinationApproachTracker()
 
     var dateString: CalendarDateString { HDFormat.apiDate(date) }
     var isToday: Bool { dateString == HDFormat.apiDate(Date()) }
@@ -27,6 +30,7 @@ final class DeliveryViewModel {
         }
         let api = env.api
         let day = dateString
+        if stops.first.map({ $0.scheduledDate != day }) ?? false { approachTracker.reset() }
         do {
             async let s = api.stops(date: day)
             async let r = api.route(date: day)
@@ -80,6 +84,7 @@ final class DeliveryViewModel {
         let ids = summary.items.map(\.stop.id)
         let newOrder = RouteSummary.reordered(ids, from: Array(source), to: destination)
         guard newOrder != ids else { return }
+        env.voice.handleHappyDriveEvent(.routeRecalculation)
         busyMessage = "順番を更新しています"
         defer { busyMessage = nil }
         do {
@@ -87,6 +92,14 @@ final class DeliveryViewModel {
             setRoute(updated, env: env)
         } catch {
             errorMessage = error.hdUserMessage
+        }
+    }
+
+    /// 現在地の更新ごとに呼ぶ。運行中に移動中の配送先から 200m 以内に入ったらアバターが反応する
+    func checkApproach(current: GeoPoint, env: AppEnvironment) {
+        guard env.voice.state.isActive else { return }
+        if approachTracker.update(stops: stops, current: current, routeInProgress: route?.status == .in_progress) != nil {
+            env.voice.handleHappyDriveEvent(.destinationApproaching)
         }
     }
 
@@ -116,12 +129,21 @@ extension AppEnvironment {
 
         switch try await queue.submit(mutation, attachmentData: data) {
         case .sent(let response):
+            noteDeliveryCompleted(event)
             if let updated = try? HDJSON.makeDecoder().decode(Stop.self, from: response.body) {
                 return (updated, false)
             }
             return (stop.applyingLocally(event), false)
         case .queued:
+            // 圏外でも記録は確定している（接続回復後に送信）
+            noteDeliveryCompleted(event)
             return (stop.applyingLocally(event), true)
+        }
+    }
+
+    private func noteDeliveryCompleted(_ event: StopEventRequest) {
+        if event.eventType == .delivered {
+            voice.handleHappyDriveEvent(.deliveryCompleted)
         }
     }
 }

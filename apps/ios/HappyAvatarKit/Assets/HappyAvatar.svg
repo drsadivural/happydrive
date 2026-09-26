@@ -1,0 +1,30 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<rect width="1024" height="1024" fill="none"/>
+<g id="tail">
+  <circle cx="175" cy="650" r="82" fill="#ff8db8"/>
+  <circle cx="125" cy="710" r="78" fill="#f7f7f7"/>
+  <circle cx="205" cy="735" r="78" fill="#ff9cc0"/>
+</g>
+<g id="body">
+  <rect x="205" y="150" width="650" height="690" rx="230" fill="#ff74ad"/>
+</g>
+<g id="face">
+  <ellipse cx="512" cy="410" rx="235" ry="170" fill="#ffffff"/>
+</g>
+<g id="eyes">
+  <circle cx="420" cy="398" r="32" fill="#431d13"/>
+  <circle cx="615" cy="370" r="32" fill="#431d13"/>
+</g>
+<g id="beak">
+  <ellipse cx="520" cy="485" rx="75" ry="45" fill="#ff9300"/>
+</g>
+<g id="bow">
+  <ellipse cx="430" cy="610" rx="95" ry="58" transform="rotate(-13 430 610)" fill="#66baf9"/>
+  <ellipse cx="595" cy="610" rx="95" ry="58" transform="rotate(13 595 610)" fill="#66baf9"/>
+  <circle cx="512" cy="610" r="56" fill="#73c1fb"/>
+</g>
+<g id="feet">
+  <ellipse cx="365" cy="810" rx="90" ry="55" transform="rotate(-12 365 810)" fill="#f8e67d"/>
+  <ellipse cx="690" cy="790" rx="90" ry="55" transform="rotate(12 690 790)" fill="#f8e67d"/>
+</g>
+</svg>

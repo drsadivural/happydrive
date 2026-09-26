@@ -1,5 +1,6 @@
 import SwiftUI
 import HappyDriveCore
+import HappyAvatarKit
 
 enum AcceptOutcome {
     case accepted(Assignment)
@@ -159,6 +160,7 @@ struct AcceptConfirmationSheet: View {
             if assignment.state == .reserved {
                 reserved = assignment
             } else {
+                env.voice.handleHappyDriveEvent(.jobAccepted)
                 onOutcome(.accepted(assignment))
                 dismiss()
             }

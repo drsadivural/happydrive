@@ -97,6 +97,10 @@ struct MainTabView: View {
         .safeAreaInset(edge: .top, spacing: 0) {
             OfflineBanner(isOnline: env.network.isOnline, pendingCount: env.pendingMutations.count)
         }
+        .overlay {
+            // 音声会話の最小化中：地図・ナビを含むすべてのタブの上にミニアバター
+            VoiceMiniAvatarOverlay()
+        }
         .fullScreenCover(isPresented: $router.isVoiceAssistantPresented) {
             VoiceConversationView()
         }
