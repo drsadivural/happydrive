@@ -5,7 +5,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { call, loginWorker, setupApp, testConfig, webUser, type TestEnv } from './helpers.js';
 import { closeStaleVoiceSessions } from '../src/jobs/maintenance.js';
 
-const PERMANENT_KEY = 'sk-test-permanent-key-must-never-leak-0123456789';
+// Fake server-side key (low-entropy on purpose so secret scanners don't flag the fixture).
+const PERMANENT_KEY = `sk-test-${'x'.repeat(40)}`;
 
 interface Captured { url: string; headers: IncomingMessage['headers']; body: any }
 let fake: Server;
