@@ -33,7 +33,50 @@ export interface Config {
   minHourlyWageYen: number;
   restrictedCategoriesEnabled: boolean;
   locationRetentionDays: number;
+  voice: VoiceConfig;
   recipientContactRetentionDays: number;
+}
+
+/** Realtime voice assistant. The permanent OpenAI key lives only here (server env / secret store). */
+export interface VoiceConfig {
+  openaiApiKey?: string;
+  openaiBaseUrl: string;
+  realtimeModel: string;
+  realtimeVoice: 'marin' | 'cedar';
+  transcribeModel: string;
+  clientSecretTtlSeconds: number;
+  maxSessionSeconds: number;
+  idleTimeoutSeconds: number;
+  sessionsPerHour: number;
+  maxConcurrentSessions: number;
+  providerTimeoutMs: number;
+}
+
+export const SUPPORTED_VOICES = ['marin', 'cedar'] as const;
+
+function loadVoiceConfig(): VoiceConfig {
+  const voice = process.env.REALTIME_VOICE ?? 'marin';
+  if (!(SUPPORTED_VOICES as readonly string[]).includes(voice)) {
+    throw new Error(`REALTIME_VOICE は ${SUPPORTED_VOICES.join(' / ')} のいずれかです`);
+  }
+  const num = (name: string, def: number, min: number, max: number) => {
+    const v = Number(process.env[name] ?? def);
+    if (!Number.isInteger(v) || v < min || v > max) throw new Error(`${name} は ${min}〜${max} の整数です`);
+    return v;
+  };
+  return {
+    openaiApiKey: process.env.OPENAI_API_KEY || undefined,
+    openaiBaseUrl: (process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, ''),
+    realtimeModel: process.env.REALTIME_MODEL ?? 'gpt-realtime-2.1',
+    realtimeVoice: voice as VoiceConfig['realtimeVoice'],
+    transcribeModel: process.env.REALTIME_TRANSCRIBE_MODEL ?? 'gpt-4o-transcribe',
+    clientSecretTtlSeconds: num('VOICE_CLIENT_SECRET_TTL_SECONDS', 120, 10, 7200),
+    maxSessionSeconds: num('VOICE_MAX_SESSION_SECONDS', 900, 60, 3600),
+    idleTimeoutSeconds: num('VOICE_IDLE_TIMEOUT_SECONDS', 120, 30, 1800),
+    sessionsPerHour: num('VOICE_SESSIONS_PER_HOUR', 20, 1, 1000),
+    maxConcurrentSessions: num('VOICE_MAX_CONCURRENT_SESSIONS', 2, 1, 10),
+    providerTimeoutMs: num('VOICE_PROVIDER_TIMEOUT_MS', 10000, 1000, 60000),
+  };
 }
 
 function req(name: string, fallback?: string): string {
@@ -138,5 +181,6 @@ export function loadConfig(): Config {
     restrictedCategoriesEnabled: false,
     locationRetentionDays: Number(process.env.LOCATION_RETENTION_DAYS ?? 30),
     recipientContactRetentionDays: Number(process.env.RECIPIENT_CONTACT_RETENTION_DAYS ?? 7),
+    voice: loadVoiceConfig(),
   };
 }

@@ -27,6 +27,7 @@ import { earningsHandlers } from './modules/payouts.js';
 import { learningHandlers } from './modules/learning.js';
 import { organizationHandlers } from './modules/organizations.js';
 import { adminHandlers } from './modules/admin.js';
+import { voiceHandlers } from './modules/voice/handlers.js';
 
 export interface BuildOptions {
   cfg?: Config;
@@ -73,6 +74,7 @@ export const allHandlers: HandlerMap = {
   ...learningHandlers,
   ...organizationHandlers,
   ...adminHandlers,
+  ...voiceHandlers,
 };
 
 /** Strips query strings (may carry coordinates) and signed tokens from logged URLs. */

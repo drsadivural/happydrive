@@ -27,6 +27,7 @@ tags:
   - name: Organization
   - name: Admin
   - name: Webhooks
+  - name: Voice
 paths:
   /healthz:
     get:
@@ -747,6 +748,43 @@ paths:
       responses:
         default: {$ref: '#/components/responses/Default'}
         '200': {description: 採点結果, content: {application/json: {schema: {$ref: '#/components/schemas/QuizResult'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  # ---------------------------------------------------------------- Voice
+  /voice/realtime-session:
+    post:
+      tags: [Voice]
+      operationId: createVoiceSession
+      description: |
+        AI音声アシスタント用の OpenAI Realtime 一時クライアントシークレットを発行する（ドライバーのみ）。
+        恒久的な API キーはサーバーにのみ保持し、応答には短命のシークレットと接続に必要な設定だけを含める。
+        利用者単位で回数制限（1時間あたりの作成数・同時接続数）。音声機能が未設定・提供元障害の場合は 503 voice_unavailable。
+        クライアントはこのシークレットで callUrl に SDP オファーを POST して WebRTC 接続を確立する。
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                previousSessionId: {type: string, format: uuid, description: 再接続時に直前のセッションID（同時接続数の計算から除外）}
+      responses:
+        default: {$ref: '#/components/responses/Default'}
+        '201': {description: 一時クライアントシークレット, content: {application/json: {schema: {$ref: '#/components/schemas/VoiceSession'}}}}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /voice/sessions/{sessionId}/end:
+    post:
+      tags: [Voice]
+      operationId: endVoiceSession
+      description: 音声セッションの終了と運用メトリクス（接続時間・応答遅延・割り込み停止遅延・再接続回数・ツール呼出し）を記録する。音声や会話内容は送らない。
+      parameters: [{name: sessionId, in: path, required: true, schema: {type: string, format: uuid}}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/VoiceSessionMetrics'}}}}
+      responses:
+        default: {$ref: '#/components/responses/Default'}
+        '204': {description: 記録}
         '404': {$ref: '#/components/responses/NotFound'}
 
   # ---------------------------------------------------------------- Organization
@@ -1782,6 +1820,37 @@ components:
       type: object
       required: [id, cutoffDate, payoutCount, totalYen]
       properties: {id: {type: string, format: uuid}, cutoffDate: {type: string, format: date}, payoutCount: {type: integer}, totalYen: {type: integer}, payouts: {type: array, items: {$ref: '#/components/schemas/Payout'}}}
+    VoiceSession:
+      type: object
+      required: [sessionId, clientSecret, expiresAt, model, voice, callUrl, maxDurationSeconds, idleTimeoutSeconds, tools]
+      properties:
+        sessionId: {type: string, format: uuid}
+        clientSecret: {type: string, description: 短命の一時シークレット（ログ・保存禁止）}
+        expiresAt: {type: string, format: date-time}
+        model: {type: string}
+        voice: {type: string}
+        callUrl: {type: string, format: uri, description: SDP オファーの送信先（WebRTC）}
+        maxDurationSeconds: {type: integer, minimum: 60}
+        idleTimeoutSeconds: {type: integer, minimum: 30}
+        tools: {type: array, items: {type: string}, description: このセッションで使用可能なツール名（クライアントの許可リストと照合する）}
+    VoiceSessionMetrics:
+      type: object
+      additionalProperties: false
+      required: [endReason, durationSeconds]
+      properties:
+        endReason: {type: string, enum: [user_ended, idle_timeout, max_duration, error, background, auth_expired, reconnect_exhausted]}
+        durationSeconds: {type: integer, minimum: 0, maximum: 86400}
+        connectMs: {type: integer, minimum: 0, maximum: 600000}
+        reconnectCount: {type: integer, minimum: 0, maximum: 100}
+        userTurns: {type: integer, minimum: 0, maximum: 10000}
+        firstAudioLatencyMsP50: {type: integer, minimum: 0, maximum: 600000}
+        firstAudioLatencyMsP95: {type: integer, minimum: 0, maximum: 600000}
+        interruptionStopMsP50: {type: integer, minimum: 0, maximum: 600000}
+        toolCalls: {type: integer, minimum: 0, maximum: 10000}
+        toolFailures: {type: integer, minimum: 0, maximum: 10000}
+        toolLatencyMsP50: {type: integer, minimum: 0, maximum: 600000}
+        errorCount: {type: integer, minimum: 0, maximum: 10000}
+        lastErrorCode: {type: string, maxLength: 64}
     CourseSummary:
       type: object
       required: [id, title, category, durationMinutes, completed]

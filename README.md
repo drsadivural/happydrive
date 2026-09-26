@@ -90,6 +90,36 @@ API の試験は実際の PostgreSQL/PostGIS（`TEST_DATABASE_URL`、既定 `loc
 - **マッチング**: 資格・時間重複・距離・停止などのハード条件で除外し、残りを説明可能なスコアで順位付け（理由を表示）。評価で自動排除しない。運営が重み・除外理由・偏りを監査できる。
 - **ルート最適化**: 時間枠・優先度・作業時間・休憩を考慮するヒューリスティック。道路所要時間の事業者と未契約のため**概算**と明示し、最適解を保証しない。
 
+## Realtime Voice（AIアシスタント）
+
+ドライバーアプリの「音声で話す」から、日本語で自然に話せる AI アシスタントを使えます（OpenAI Realtime API の音声対音声、WebRTC）。話している途中の割り込み、文字入力への切替（同じ会話の文脈を維持）、今日の予定・配送先・案件・業務・報酬・通知の確認（既存APIを利用する読み取り専用ツール）に対応します。
+
+```mermaid
+sequenceDiagram
+  participant App as iPhone（HappyDrive）
+  participant API as HappyDrive API
+  participant OAI as OpenAI Realtime
+  App->>API: POST /v1/voice/realtime-session（ログイン中のドライバーのトークン）
+  API->>OAI: POST /v1/realtime/client_secrets（恒久キー・日本語指示・ツール定義）
+  OAI-->>API: 一時クライアントシークレット（約2分）
+  API-->>App: sessionId・一時シークレット・接続先
+  App->>OAI: POST /v1/realtime/calls（SDPオファー、一時シークレット）
+  OAI-->>App: SDPアンサー → 音声トラック + イベント用データチャネル
+  OAI-->>App: function_call（例: get_today_overview）
+  App->>API: 既存API（GET /v1/home など、本人の権限）
+  App-->>OAI: function_call_output → 音声で回答
+  App->>API: POST /v1/voice/sessions/{id}/end（運用メトリクスのみ）
+```
+
+- **秘密鍵**: `OPENAI_API_KEY` はサーバーだけに置きます（`/etc/happydrive/api.env` 等の秘密ストア）。iOS・Web・リポジトリには入れません。アプリには短命の一時シークレットだけが渡ります。
+- **設定の一元化**: モデル・音声・文字起こしモデル・時間制限・回数制限は環境変数（`.env.example` の Realtime voice 節）。既定は `gpt-realtime-2.1` / `marin`。日本語の指示とツール定義は `services/api/src/modules/voice/`。
+- **エンドポイント**: `POST /v1/voice/realtime-session`（ドライバーのみ、1時間あたりの作成数と同時接続数を利用者単位で制限、未設定・障害時は 503 `voice_unavailable`）、`POST /v1/voice/sessions/{id}/end`（メトリクス、音声・会話内容は送らない）。
+- **プライバシー**: 生の音声は保存しません。会話の文字起こしはアプリのメモリ内のみで、サーバーに保存しません。マイク使用中は画面に明示します。
+- **ローカル開発**: API を起動し `OPENAI_API_KEY` を設定、iOS の Debug 接続先（`apps/ios/Config/Debug.xcconfig`）を API に向けます。キー未設定でもアプリは「音声アシスタントは現在ご利用いただけません」を表示して動作します。
+- **試験**: `services/api/test/voice.test.ts`（認証・レート制限・提供元エラーの無害化・鍵が漏れないこと）、iOS は `HappyDriveCore` の Voice テストと UI テスト。音声品質・割り込み・エコーは実機での確認が必要です（`apps/ios/README.md` の手動試験計画）。
+- **トラブルシュート**: 503 → `OPENAI_API_KEY` と `journalctl -u happydrive-api`（`voice_session_failure` の `code`）を確認。429 → 回数制限（`VOICE_SESSIONS_PER_HOUR` / `VOICE_MAX_CONCURRENT_SESSIONS`）。接続後に無音 → 端末の音量・消音スイッチ・Bluetooth の接続先。
+- **本番**: 秘密ストアに `OPENAI_API_KEY` を登録し API を再起動。CI には鍵は不要です（提供元はテスト内の代替サーバーで検証）。
+
 ## ドキュメント
 - 要件→画面→API→試験: `docs/TRACEABILITY.md`
 - 事業判断が必要な事項: `docs/DECISIONS_REQUIRED.md`

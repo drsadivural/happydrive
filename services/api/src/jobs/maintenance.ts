@@ -26,6 +26,16 @@ export async function expireReservations(ctx: AppContext): Promise<number> {
   });
 }
 
+/** Voice sessions whose app never reported an end (crash, kill) are closed so they stop counting as concurrent. */
+export async function closeStaleVoiceSessions(ctx: AppContext): Promise<number> {
+  const r = await ctx.db.query(
+    `UPDATE voice_sessions SET status = CASE WHEN status = 'pending' THEN 'failed' ELSE 'ended' END, ended_at = now(), end_reason = 'expired'
+     WHERE ended_at IS NULL AND created_at < now() - make_interval(secs => $1)`,
+    [ctx.cfg.voice.maxSessionSeconds + 300],
+  );
+  return r.rowCount ?? 0;
+}
+
 /** Published jobs past their start stop recruiting; finished jobs with no live work are completed. */
 export async function closeJobs(ctx: AppContext): Promise<{ expired: number; completed: number }> {
   return withTx(ctx.db, async (c) => {

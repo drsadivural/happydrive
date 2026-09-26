@@ -1012,6 +1012,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/voice/realtime-session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description AI音声アシスタント用の OpenAI Realtime 一時クライアントシークレットを発行する（ドライバーのみ）。
+         *     恒久的な API キーはサーバーにのみ保持し、応答には短命のシークレットと接続に必要な設定だけを含める。
+         *     利用者単位で回数制限（1時間あたりの作成数・同時接続数）。音声機能が未設定・提供元障害の場合は 503 voice_unavailable。
+         *     クライアントはこのシークレットで callUrl に SDP オファーを POST して WebRTC 接続を確立する。
+         */
+        post: operations["createVoiceSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/voice/sessions/{sessionId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 音声セッションの終了と運用メトリクス（接続時間・応答遅延・割り込み停止遅延・再接続回数・ツール呼出し）を記録する。音声や会話内容は送らない。 */
+        post: operations["endVoiceSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/organizations": {
         parameters: {
             query?: never;
@@ -2490,6 +2529,41 @@ export interface components {
             payoutCount: number;
             totalYen: number;
             payouts?: components["schemas"]["Payout"][];
+        };
+        VoiceSession: {
+            /** Format: uuid */
+            sessionId: string;
+            /** @description 短命の一時シークレット（ログ・保存禁止） */
+            clientSecret: string;
+            /** Format: date-time */
+            expiresAt: string;
+            model: string;
+            voice: string;
+            /**
+             * Format: uri
+             * @description SDP オファーの送信先（WebRTC）
+             */
+            callUrl: string;
+            maxDurationSeconds: number;
+            idleTimeoutSeconds: number;
+            /** @description このセッションで使用可能なツール名（クライアントの許可リストと照合する） */
+            tools: string[];
+        };
+        VoiceSessionMetrics: {
+            /** @enum {string} */
+            endReason: "user_ended" | "idle_timeout" | "max_duration" | "error" | "background" | "auth_expired" | "reconnect_exhausted";
+            durationSeconds: number;
+            connectMs?: number;
+            reconnectCount?: number;
+            userTurns?: number;
+            firstAudioLatencyMsP50?: number;
+            firstAudioLatencyMsP95?: number;
+            interruptionStopMsP50?: number;
+            toolCalls?: number;
+            toolFailures?: number;
+            toolLatencyMsP50?: number;
+            errorCount?: number;
+            lastErrorCode?: string;
         };
         CourseSummary: {
             id: string;
@@ -4743,6 +4817,66 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["QuizResult"];
                 };
+            };
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["Default"];
+        };
+    };
+    createVoiceSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: uuid
+                     * @description 再接続時に直前のセッションID（同時接続数の計算から除外）
+                     */
+                    previousSessionId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 一時クライアントシークレット */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceSession"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["Unavailable"];
+            default: components["responses"]["Default"];
+        };
+    };
+    endVoiceSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSessionMetrics"];
+            };
+        };
+        responses: {
+            /** @description 記録 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             404: components["responses"]["NotFound"];
             default: components["responses"]["Default"];

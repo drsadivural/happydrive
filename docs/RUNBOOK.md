@@ -18,6 +18,7 @@ API と Worker は同じイメージ（`services/api/Dockerfile`）。水平ス�
 - 秘密値（JWT・暗号鍵）は構築時に生成した専用の値。開発用シード（公開リポジトリに既知のパスワード）は投入しない。
 - 運営アカウント作成: `sudo bash -c 'set -a; . /etc/happydrive/api.env; set +a; cd /home/ubuntu/happydrive/services/api && sudo -u ubuntu --preserve-env=NODE_ENV,DATABASE_URL,DATA_ENCRYPTION_KEY,DATA_HMAC_KEY,JWT_SECRET node --import tsx scripts/create-admin.ts --email you@example.com --name 運営 --role admin_operator'`
 - 更新手順: `git pull` → `pnpm --filter @happydrive/api build` → `sudo systemctl restart happydrive-api happydrive-worker`（マイグレーションは `node dist/db/migrate-cli.js` を同じ環境変数で実行）
+- 音声アシスタント: `sudo sh -c 'echo OPENAI_API_KEY=sk-... >> /etc/happydrive/api.env'` → `sudo systemctl restart happydrive-api`（キーはこのファイルだけに置く。ログ・Git に出さない）
 - 状態確認: `curl https://happydrive-api.ayonix.com/v1/readyz`、`journalctl -u happydrive-api -f`
 
 ## 初回構築

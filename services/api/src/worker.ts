@@ -7,7 +7,7 @@ import { createSms } from './adapters/sms.js';
 import { createPayouts } from './adapters/payouts.js';
 import { ApnsClient } from './adapters/apns.js';
 import type { AppContext } from './context.js';
-import { applyRetention, closeJobs, deliverOutbox, expireReservations, reconcilePayouts } from './jobs/maintenance.js';
+import { applyRetention, closeJobs, closeStaleVoiceSessions, deliverOutbox, expireReservations, reconcilePayouts } from './jobs/maintenance.js';
 
 const cfg = loadConfig();
 const log = pino({ level: cfg.logLevel });
@@ -37,6 +37,7 @@ const every = (name: string, ms: number, fn: () => Promise<unknown>) => {
 every('outbox', 2_000, () => deliverOutbox(ctx, apns));
 every('reservations', 30_000, () => expireReservations(ctx));
 every('jobs', 60_000, () => closeJobs(ctx));
+every('voice', 60_000, () => closeStaleVoiceSessions(ctx));
 every('payouts', 60_000, () => reconcilePayouts(ctx));
 every('retention', 60 * 60_000, () => applyRetention(ctx));
 

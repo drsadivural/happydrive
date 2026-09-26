@@ -166,7 +166,7 @@ describe('contract conformance', () => {
     // Binary blob endpoints are exercised via app.inject in helpers; the rest are covered by the dedicated suites.
     expect(notExercised).toEqual([
       'adminDecideSkill', 'adminReassign', 'adminResolveDispute', 'adminReverseEarning', 'adminRetryPayout', 'adminReviewJob',
-      'decideReservation', 'deviceLogin', 'downloadEvidenceBlobLocal', 'joinWaitlist', 'leaveWaitlist', 'paymentWebhook', 'refreshTokens',
+      'createVoiceSession', 'decideReservation', 'deviceLogin', 'downloadEvidenceBlobLocal', 'endVoiceSession', 'joinWaitlist', 'leaveWaitlist', 'paymentWebhook', 'refreshTokens',
       'reportNoShow', 'requestAccountDeletion', 'uploadEvidenceBlobLocal', 'webLogin', 'webMfaVerify', 'webSignup',
     ].filter((o) => !cv.seen.has(o)).sort());
   }, 120_000);
