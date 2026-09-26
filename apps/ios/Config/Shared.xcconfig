@@ -16,6 +16,6 @@ CODE_SIGN_STYLE = Automatic
 HD_TERMS_VERSION = 2026-09-26
 HD_PRIVACY_VERSION = 2026-09-26
 HD_TERMS_URL = https:/$()/happydrive.jp/terms
-HD_PRIVACY_URL = https:/$()/happydrive.jp/privacy
+HD_PRIVACY_URL = http:/$()/www.happydrive.jp/privacy.php
 HD_SUPPORT_URL = https:/$()/happydrive.jp/support
 CODE_SIGN_ENTITLEMENTS = HappyDrive/Supporting/HappyDrive.entitlements

@@ -32,7 +32,10 @@ struct AddStopView: View {
     @State private var duplicateWarning: String?
     @State private var didPrefill = false
 
+    @State private var isLocating = false
+
     private var isEditing: Bool { existing != nil }
+    private var isAddressEmpty: Bool { address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     var body: some View {
         NavigationStack {
@@ -147,11 +150,20 @@ struct AddStopView: View {
                     }
                 }
                 Button {
-                    Task { await geocode() }
+                    Task {
+                        if isAddressEmpty { await useCurrentLocation() } else { await geocode() }
+                    }
                 } label: {
-                    Label(search.isSearching ? "検索中…" : "この住所で位置を検索", systemImage: "magnifyingglass")
+                    if search.isSearching || isLocating {
+                        Label(isLocating ? "現在地を取得中…" : "検索中…", systemImage: "hourglass")
+                    } else if isAddressEmpty {
+                        Label("現在地の住所を使う", systemImage: "location.fill")
+                    } else {
+                        Label("この住所で位置を検索", systemImage: "magnifyingglass")
+                    }
                 }
-                .disabled(address.trimmingCharacters(in: .whitespaces).count < 4 || search.isSearching)
+                .disabled(search.isSearching || isLocating || (!isAddressEmpty && address.trimmingCharacters(in: .whitespaces).count < 4))
+                .accessibilityHint(isAddressEmpty ? "端末の位置情報から現在地の住所を入力します" : "入力した住所の位置を検索します")
                 ForEach(candidates) { c in
                     Button {
                         confirmed = c
@@ -219,6 +231,44 @@ struct AddStopView: View {
             if candidates.isEmpty { errorMessage = "該当する住所が見つかりませんでした。番地まで入力してください。" }
         } catch {
             errorMessage = "該当する住所が見つかりませんでした。番地まで入力するか、表記を変えて検索してください。"
+        }
+    }
+
+    /// 住所が空のとき：GPS の現在地から住所を求めて入力し、その位置で確定する
+    private func useCurrentLocation() async {
+        errorMessage = nil
+        candidates = []
+        let location = env.location
+        if location.authorization == .notDetermined {
+            location.requestWhenInUse()
+            // 許可ダイアログの応答を待つ（最大 30 秒）
+            for _ in 0..<60 where location.authorization == .notDetermined {
+                try? await Task.sleep(for: .milliseconds(500))
+            }
+        }
+        guard location.isAuthorized else {
+            errorMessage = location.isDenied
+                ? "位置情報が許可されていません。設定アプリの「HappyDrive」で位置情報を「使用中のみ」にするか、住所を入力してください。"
+                : "現在地を取得できませんでした。住所を入力してください。"
+            return
+        }
+        isLocating = true
+        let current = await location.currentLocation(maxAge: 15)
+        isLocating = false
+        guard let current else {
+            errorMessage = "現在地を取得できませんでした。屋外など電波の良い場所で再度お試しいただくか、住所を入力してください。"
+            return
+        }
+        do {
+            if let candidate = try await search.reverseGeocode(current) {
+                address = candidate.address
+                confirmed = candidate
+                keepExistingLocation = false
+            } else {
+                errorMessage = "現在地の住所が見つかりませんでした。住所を入力してください。"
+            }
+        } catch {
+            errorMessage = "現在地の住所を取得できませんでした。通信状態を確認するか、住所を入力してください。"
         }
     }
 

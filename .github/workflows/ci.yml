@@ -1,6 +1,6 @@
 name: CI
 on:
-  push: { branches: [main] }
+  push: { branches: [main, 'feature/**'] }
   pull_request:
 
 permissions:
@@ -73,7 +73,6 @@ jobs:
   ios-app:
     # Full Xcode build + UI tests. Requires a macOS runner with Xcode 16+.
     runs-on: macos-15
-    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
       - run: xcodebuild -project apps/ios/HappyDrive.xcodeproj -scheme HappyDrive -destination 'platform=iOS Simulator,name=iPhone 16' -configuration Debug build CODE_SIGNING_ALLOWED=NO

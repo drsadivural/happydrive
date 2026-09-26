@@ -132,6 +132,17 @@ final class AddressSearchService: NSObject, MKLocalSearchCompleterDelegate {
         }
     }
 
+    /// 現在地（GPS）の座標から住所を求める。位置は GPS の座標をそのまま使う（住所は表示・確認用）。
+    func reverseGeocode(_ location: CLLocation) async throws -> AddressCandidate? {
+        isSearching = true
+        defer { isSearching = false }
+        let placemarks = try await CLGeocoder().reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "ja_JP"))
+        guard let p = placemarks.first else { return nil }
+        let address = AddressCandidate.format(p)
+        guard !address.isEmpty else { return nil }
+        return AddressCandidate(title: "現在地", address: address, coordinate: location.coordinate)
+    }
+
     /// 入力文字列をそのまま住所として検索
     func geocode(_ text: String) async throws -> [AddressCandidate] {
         isSearching = true
