@@ -16,7 +16,7 @@
 
 | 領域 | 状態 | 根拠 |
 |---|---|---|
-| API / DB | 実装済み。P0 受け入れ項目の自動試験が合格 | `docs/TEST_RESULTS.md`（61件、契約適合の自動検証を含む） |
+| API / DB | 実装済み。P0 受け入れ項目の自動試験が合格 | `docs/TEST_RESULTS.md`（65件、契約適合の自動検証を含む） |
 | 企業 Web / 運営 Web | 実装済み。lint・型・単体試験・本番ビルド合格、実APIとの結合確認 | 各 `apps/*/README.md` |
 | iOS | Xcode ビルド成功（CI の macOS ランナー）。コア部の単体試験67件合格。Debug の接続先は公開ステージング `https://happydrive-api.ayonix.com/v1` | `apps/ios/README.md`, `apps/ios/TEST_RESULTS.md` |
 | iOS 実機試験・UIテスト・TestFlight・App Store 提出 | **未実施** | `docs/spec/APPLE_RELEASE.md` の手順で実施が必要 |

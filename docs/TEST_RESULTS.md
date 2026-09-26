@@ -10,7 +10,7 @@
 |---|---|---|
 | API契約 | `pnpm --filter @happydrive/contracts lint` / `check-generated` | 合格（Redocly エラー0、生成型が最新） |
 | API | `pnpm --filter @happydrive/api lint` / `typecheck` / `build` | 合格 |
-| API 結合試験（実 PostgreSQL/PostGIS） | `pnpm --filter @happydrive/api test` | **61件 合格 / 失敗0**（9ファイル）。全応答を OpenAPI 契約で自動検証 |
+| API 結合試験（実 PostgreSQL/PostGIS） | `pnpm --filter @happydrive/api test` | **65件 合格 / 失敗0**（9ファイル、端末ログイン4件を含む）。全応答を OpenAPI 契約で自動検証 |
 | web-ui | lint / typecheck / test | 合格、69件 |
 | partner-web | lint / typecheck / test / `next build` | 合格、27件 |
 | admin-web | lint / typecheck / test / `next build` | 合格、14件 |
