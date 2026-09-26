@@ -222,13 +222,13 @@ final class APIClientTests: XCTestCase {
             }
         }
         let api = HappyDriveAPI(client: APIClient(baseURL: testBaseURL, transport: transport, tokenStore: store))
-        let ev = try await api.uploadEvidence(data: photo, contentType: .jpeg, purpose: .delivery_photo, deliveryStopId: "stop-1", idempotencyKey: "key-0123456789abcdef")
+        let ev = try await api.uploadEvidence(data: photo, contentType: .jpeg, purpose: .delivery_photo, deliveryStopId: "stop-1", idempotencyKey: String(repeating: "k", count: 20))
         XCTAssertEqual(ev.status, .verified)
         let create = transport.requests[0]
         let body = try XCTUnwrap(JSONSerialization.jsonObject(with: create.body ?? Data()) as? [String: Any])
         XCTAssertEqual(body["sha256"] as? String, EvidenceHashing.sha256Hex(photo))
         XCTAssertEqual(body["byteSize"] as? Int, 6)
-        XCTAssertEqual(create.headers["Idempotency-Key"], "key-0123456789abcdef")
+        XCTAssertEqual(create.headers["Idempotency-Key"], String(repeating: "k", count: 20))
         let put = transport.requests[1]
         XCTAssertEqual(put.method, .put)
         XCTAssertNil(put.headers["Authorization"], "署名 URL には Bearer を付けない")
