@@ -1,0 +1,54 @@
+import {test,expect,type Page} from '@playwright/test';
+async function login(page:Page,phone:string){
+  if(test.info().project.name==='mobile')phone=phone==='09011112222'?'09055556666':'09077778888';
+  await page.goto('/customer-login');await page.getByLabel('電話番号',{exact:true}).fill(phone);
+  await page.getByRole('button',{name:'確認コードを送信',exact:true}).click();
+  await expect(page.getByLabel('SMSの6桁の確認コード')).toBeVisible();
+  const otp=await page.request.get('http://127.0.0.1:8095/__test/otp/'+encodeURIComponent('+81'+phone.slice(1)));
+  await page.getByLabel('SMSの6桁の確認コード').fill((await otp.json()).code);
+  await page.getByRole('button',{name:'ログイン',exact:true}).click();await expect(page).toHaveURL(/\/marketplace/);
+}
+function localDate(date:Date){return new Date(date.getTime()+9*3600000).toISOString().slice(0,16);}
+test('customer login, catalog, post, history, cancellation, plans, and logout',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await login(page,'09011112222');
+  await expect(page.getByRole('heading',{name:'毎日の暮らしに、頼れる支援を。'})).toBeVisible();
+  await page.getByRole('button',{name:'サービスを見る',exact:true}).click();
+  await page.getByRole('button',{name:'依頼内容を入力'}).first().click();
+  await page.getByLabel('タイトル',{exact:true}).fill('ブラウザ通し試験の買い物依頼');
+  await page.getByLabel('内容',{exact:true}).fill('玄関までの支援をお願いします');
+  await page.getByLabel('現場住所',{exact:true}).fill('東京都千代田区1-1');
+  await page.getByLabel('開始（日本時間）').fill(localDate(new Date(Date.now()+3*3600000)));
+  await page.getByLabel('終了（日本時間）').fill(localDate(new Date(Date.now()+4*3600000)));
+  await page.getByRole('button',{name:'依頼を投稿',exact:true}).click();
+  await page.getByRole('button',{name:/ブラウザ通し試験の買い物依頼/}).first().click();
+  await expect(page.getByRole('heading',{name:'ブラウザ通し試験の買い物依頼',exact:true})).toBeVisible();
+  page.once('dialog',d=>d.accept('予定の変更'));
+  await page.getByRole('button',{name:'キャンセル',exact:true}).click();
+  await expect(page.getByText('キャンセル',{exact:true}).first()).toBeVisible();
+  await page.getByRole('link',{name:'会員プラン',exact:true}).last().click();
+  await expect(page.getByRole('heading',{name:'お申込み受付準備中'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'ケア',exact:true})).toBeVisible();
+  await page.screenshot({path:`test-results/customer-${test.info().project.name}.png`,fullPage:true});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
+  if(test.info().project.name==='mobile')await page.getByRole('button',{name:'メニュー',exact:true}).click();
+  await page.getByRole('button',{name:'ログアウト',exact:true}).click();await expect(page).toHaveURL(/customer-login/);
+});
+test('supplier mode, service review submission, and tenant allowlist',async({page})=>{
+  await login(page,'09033334444');
+  await page.getByLabel('利用モード').selectOption('supplier');
+  await expect(page.getByRole('heading',{name:'供給者ダッシュボード'})).toBeVisible();
+  await page.getByRole('link',{name:'サービス',exact:true}).last().click();
+  await page.getByLabel('名称',{exact:true}).fill('ブラウザ試験の訪問支援');
+  await page.getByLabel('説明',{exact:true}).fill('予約に合わせてご訪問します');
+  await page.getByLabel('対象地域コード（カンマ区切り）').fill('13101');
+  await page.getByLabel('所要時間（分）').fill('60');
+  await page.getByLabel('価格・見積方法').fill('作業内容を確認して見積');
+  await page.getByRole('button',{name:'審査を申請'}).click();
+  await expect(page.getByRole('heading',{name:'ブラウザ試験の訪問支援',exact:true}).first()).toBeVisible();
+  await expect(page.getByText('審査中',{exact:true}).first()).toBeVisible();
+  const denied=await page.request.get('/api/hd/admin/users');expect(denied.status()).toBe(403);
+  await page.screenshot({path:`test-results/supplier-${test.info().project.name}.png`,fullPage:true});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+});

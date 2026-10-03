@@ -5,7 +5,8 @@ import { COOKIE_PREFIX } from './lib/config';
 
 const guard = createPageGuard({
   session: sessionConfig(COOKIE_PREFIX),
-  publicPaths: ['/login', '/signup'],
+  loginPath: '/customer-login',
+  publicPaths: ['/login', '/signup', '/customer-login'],
 });
 
 export function proxy(request: NextRequest) {

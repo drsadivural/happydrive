@@ -156,5 +156,36 @@ export function createAuthHandlers(options: AuthHandlerOptions) {
     return out;
   }
 
-  return { login, signup, mfa, logout };
+  async function otpRequest(req: NextRequest): Promise<Response> {
+    const csrf = verifyCsrf(req, cfg);
+    if (csrf) return csrf;
+    const body = await readJson(req);
+    const phone = str(body?.phone).trim();
+    if (!/^(\+81|0)[0-9]{9,10}$/.test(phone)) return errorResponse(422, 'validation_error', '日本の電話番号を入力してください。');
+    const upstream = await callApi(apiBase, '/auth/otp/request', { phone });
+    if (!upstream) return errorResponse(502, 'upstream_unreachable', UPSTREAM_UNREACHABLE_MESSAGE);
+    if (!upstream.ok) return passThroughError(upstream);
+    return jsonResponse(202, await upstream.json());
+  }
+
+  async function otpVerify(req: NextRequest): Promise<Response> {
+    const csrf = verifyCsrf(req, cfg);
+    if (csrf) return csrf;
+    // OTP login must never bypass an admin application's required MFA and roles.
+    if (options.requiredRoles) return errorResponse(403, 'role_required', '管理者は多要素認証でログインしてください。');
+    const body = await readJson(req);
+    const phone = str(body?.phone).trim();
+    const code = str(body?.code).trim();
+    if (!/^(\+81|0)[0-9]{9,10}$/.test(phone) || !/^[0-9]{6}$/.test(code)) return errorResponse(422, 'validation_error', '電話番号と6桁の確認コードを入力してください。');
+    const upstream = await callApi(apiBase, '/auth/otp/verify', { phone, code, deviceName: 'HappyDrive Web' });
+    if (!upstream) return errorResponse(502, 'upstream_unreachable', UPSTREAM_UNREACHABLE_MESSAGE);
+    if (!upstream.ok) return passThroughError(upstream);
+    const result = await upstream.json() as AuthResult;
+    if (!result?.tokens?.accessToken || !result.tokens.refreshToken) return errorResponse(502, 'invalid_upstream_response', 'サーバーの応答が不正です。');
+    const response = jsonResponse(200, { user: { displayName: result.user.displayName } });
+    applyCookies(response, sessionCookies(cfg, result.tokens));
+    return response;
+  }
+
+  return { login, signup, mfa, logout, otpRequest, otpVerify };
 }

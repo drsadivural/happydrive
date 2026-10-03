@@ -15,7 +15,7 @@ struct RootView: View {
                 if env.session.needsOnboardingScreen {
                     OnboardingFlowView()
                 } else {
-                    MainTabView()
+                    MarketplaceRootView()
                 }
             }
         }

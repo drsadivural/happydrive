@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { admin, approvedOrg, call as rawCall, jobInput, publishedJob, setupApp, uploadEvidence, verifiedWorker, type Session, type TestEnv } from './helpers.js';
 import { contractValidator, type ContractValidator } from './contract-validator.js';
 import { allHandlers } from '../src/server.js';
+import { exerciseMarketplaceContract } from './marketplace-contract-flow.js';
 
 let env: TestEnv;
 let cv: ContractValidator;
@@ -161,6 +162,7 @@ describe('contract conformance', () => {
     await call(org.owner, 'DELETE', `/organizations/${org.orgId}/sites/${site.body.id}`);
     await call(w, 'POST', '/auth/logout', { refreshToken: w.refresh });
 
+    await exerciseMarketplaceContract(env,op);
     const all = Object.values<any>(cv.spec.paths).flatMap((item) => ['get', 'post', 'put', 'patch', 'delete'].filter((m) => item[m]).map((m) => item[m].operationId));
     const notExercised = all.filter((o) => !cv.seen.has(o)).sort();
     // Binary blob endpoints are exercised via app.inject in helpers; the rest are covered by the dedicated suites.

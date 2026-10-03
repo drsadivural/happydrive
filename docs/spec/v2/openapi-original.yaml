@@ -1,0 +1,340 @@
+openapi: 3.1.0
+info:
+  title: HappyDrive API v2
+  version: 2.0.0
+  description: 顧客投稿・供給者受諾・顧客QR発行と供給者読取。全書込はIdempotency-Keyと監査イベント。
+servers:
+  - url: https://api.happydrive.jp/v2
+security:
+  - bearerAuth: []
+paths:
+  /auth/otp/start:
+    post:
+      security: []
+      operationId: startOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [phone], properties: {phone: {type: string, pattern: '^\+[1-9][0-9]{7,14}$'}}}
+      responses:
+        '202': {description: OTP送信受付}
+        '429': {$ref: '#/components/responses/RateLimited'}
+  /auth/otp/verify:
+    post:
+      security: []
+      operationId: verifyOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [phone, code], properties: {phone: {type: string}, code: {type: string, minLength: 4, maxLength: 8}}}
+      responses:
+        '200': {description: 認証済session, content: {application/json: {schema: {$ref: '#/components/schemas/Session'}}}}
+  /me:
+    get:
+      operationId: getProfile
+      responses:
+        '200': {description: プロフィール, content: {application/json: {schema: {$ref: '#/components/schemas/Profile'}}}}
+    patch:
+      operationId: updateProfile
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ProfileInput'}}}}
+      responses:
+        '200': {description: 更新済みプロフィール, content: {application/json: {schema: {$ref: '#/components/schemas/Profile'}}}}
+    delete:
+      operationId: requestDeletion
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '202': {description: 退会申請受理}
+  /plans:
+    get:
+      operationId: getPlans
+      security: []
+      responses:
+        '200': {description: 公開中の顧客プランと現行価格, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/Plan'}}}}}
+  /customer/subscription/setup:
+    post:
+      operationId: setupCustomerSubscription
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [planCode], properties: {planCode: {type: string, enum: [basic, standard, care]}}}}}}
+      responses:
+        '200': {description: Stripe SetupIntentのclient secretと料金プレビュー, content: {application/json: {schema: {$ref: '#/components/schemas/Setup'}}}}
+  /customer/subscription/confirm:
+    post:
+      operationId: confirmCustomerSubscription
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '202': {description: Subscription作成、Webhook同期待ち}
+  /customer/entitlement:
+    get:
+      operationId: getEntitlement
+      responses:
+        '200': {description: 現在の料金期間と枠, content: {application/json: {schema: {$ref: '#/components/schemas/Entitlement'}}}}
+  /suppliers:
+    post:
+      operationId: registerSupplier
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/SupplierInput'}}}}
+      responses:
+        '201': {description: 審査中供給者, content: {application/json: {schema: {$ref: '#/components/schemas/Supplier'}}}}
+  /suppliers/{supplierId}/billing/setup:
+    post:
+      operationId: setupSupplierBilling
+      parameters: [{$ref: '#/components/parameters/SupplierId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      description: Webの供給者管理者だけ。7日trial、公開承認済Price必須。
+      responses:
+        '200': {description: Stripe SetupIntent, content: {application/json: {schema: {$ref: '#/components/schemas/Setup'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /suppliers/{supplierId}/services:
+    get:
+      operationId: listSupplierServices
+      parameters: [{$ref: '#/components/parameters/SupplierId'}]
+      responses:
+        '200': {description: サービス一覧, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/Service'}}}}}
+    post:
+      operationId: addService
+      parameters: [{$ref: '#/components/parameters/SupplierId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ServiceInput'}}}}
+      responses:
+        '201': {description: 下書きサービス, content: {application/json: {schema: {$ref: '#/components/schemas/Service'}}}}
+  /suppliers/{supplierId}/mcp-connections:
+    post:
+      operationId: connectSupplierMcp
+      parameters: [{$ref: '#/components/parameters/SupplierId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [serverUrl], properties: {serverUrl: {type: string, format: uri}}}}}}
+      responses:
+        '202': {description: URL検証/OAuth開始、サービスは未公開}
+  /suppliers/{supplierId}/mcp-connections/{connectionId}/sync:
+    post:
+      operationId: syncSupplierMcp
+      parameters: [{$ref: '#/components/parameters/SupplierId'}, {name: connectionId, in: path, required: true, schema: {type: string, format: uuid}}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '202': {description: 差分プレビューを作成}
+  /catalog/services:
+    get:
+      operationId: searchServices
+      parameters:
+        - {name: category, in: query, schema: {type: string}}
+        - {name: area, in: query, schema: {type: string}}
+      responses:
+        '200': {description: 審査・公開済みサービス, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/Service'}}}}}
+  /requests:
+    get:
+      operationId: listMyRequests
+      responses:
+        '200': {description: 依頼一覧, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/Request'}}}}}
+    post:
+      operationId: postRequest
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/RequestInput'}}}}
+      responses:
+        '201': {description: 公開依頼と枠予約, content: {application/json: {schema: {$ref: '#/components/schemas/Request'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Validation'}
+  /supplier/requests:
+    get:
+      operationId: findOpenRequests
+      parameters: [{name: cursor, in: query, schema: {type: string}}]
+      responses:
+        '200': {description: 供給者に適格な公開依頼, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/Request'}}}}}
+  /requests/{requestId}:
+    get:
+      operationId: getRequest
+      parameters: [{$ref: '#/components/parameters/RequestId'}]
+      responses:
+        '200': {description: 権限に応じて住所をマスクした依頼, content: {application/json: {schema: {$ref: '#/components/schemas/Request'}}}}
+  /requests/{requestId}/accept:
+    post:
+      operationId: acceptRequest
+      parameters: [{$ref: '#/components/parameters/RequestId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '200': {description: 受諾と供給者ロック確定, content: {application/json: {schema: {$ref: '#/components/schemas/Request'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /requests/{requestId}/assign:
+    post:
+      operationId: assignStaff
+      parameters: [{$ref: '#/components/parameters/RequestId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [staffId], properties: {staffId: {type: string, format: uuid}}}}}}
+      responses:
+        '200': {description: 社内担当割当}
+  /requests/{requestId}/events:
+    post:
+      operationId: updateProgress
+      parameters: [{$ref: '#/components/parameters/RequestId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [eventType], properties: {eventType: {type: string, enum: [en_route, arrived, in_progress, awaiting_customer_confirmation, cancel, dispute]}, note: {type: string, maxLength: 2000}}}}}}
+      responses:
+        '200': {description: 進捗更新, content: {application/json: {schema: {$ref: '#/components/schemas/Request'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /requests/{requestId}/qr:
+    post:
+      operationId: issueCompletionQr
+      parameters: [{$ref: '#/components/parameters/RequestId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '201': {description: 顧客専用の短命token, content: {application/json: {schema: {$ref: '#/components/schemas/QrIssue'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /requests/{requestId}/qr/verify:
+    post:
+      operationId: verifyCompletionQr
+      parameters: [{$ref: '#/components/parameters/RequestId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [token], properties: {token: {type: string, minLength: 40, maxLength: 128}}}}}}
+      responses:
+        '200': {description: 完了確定、枠消費, content: {application/json: {schema: {$ref: '#/components/schemas/Request'}}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /billing/stripe/webhook:
+    post:
+      security: []
+      operationId: receiveStripeWebhook
+      description: raw bodyとStripe-Signatureを検証。イベントIDを重複排除。
+      parameters: [{name: Stripe-Signature, in: header, required: true, schema: {type: string}}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object}}}}
+      responses:
+        '200': {description: 受理}
+        '400': {description: 不正署名または構文}
+  /customer/subscription/change:
+    post:
+      operationId: changeCustomerPlan
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [planCode], properties: {planCode: {type: string, enum: [basic, standard, care]}}}}}}
+      responses:
+        '202': {description: 新料金/枠の反映時刻を返す}
+  /customer/subscription/cancel:
+    post:
+      operationId: cancelCustomerSubscription
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '202': {description: 期間末解約の予定日を返す}
+  /suppliers/{supplierId}/billing/portal:
+    post:
+      operationId: supplierBillingPortal
+      description: 供給者Webの組織管理者のみ。iOSからの購入誘導を提供しない。
+      parameters: [{$ref: '#/components/parameters/SupplierId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '200': {description: 短命のStripe Customer Portal URL}
+  /suppliers/{supplierId}/services/{serviceId}/submit:
+    post:
+      operationId: submitServiceForReview
+      parameters: [{$ref: '#/components/parameters/SupplierId'}, {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '202': {description: サービス審査申請}
+  /suppliers/{supplierId}/mcp-connections/{connectionId}/changes:
+    get:
+      operationId: getMcpChanges
+      parameters: [{$ref: '#/components/parameters/SupplierId'}, {name: connectionId, in: path, required: true, schema: {type: string, format: uuid}}]
+      responses:
+        '200': {description: 同期差分の一覧}
+  /suppliers/{supplierId}/mcp-connections/{connectionId}/approve:
+    post:
+      operationId: approveMcpChanges
+      parameters: [{$ref: '#/components/parameters/SupplierId'}, {name: connectionId, in: path, required: true, schema: {type: string, format: uuid}}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses:
+        '202': {description: 選択した変更を台帳へ反映し公開審査へ}
+  /requests/{requestId}/messages:
+    get:
+      operationId: listRequestMessages
+      parameters: [{$ref: '#/components/parameters/RequestId'}]
+      responses:
+        '200': {description: 当事者のみ閲覧できる連絡履歴}
+    post:
+      operationId: sendRequestMessage
+      parameters: [{$ref: '#/components/parameters/RequestId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [body], properties: {body: {type: string, minLength: 1, maxLength: 2000}}}}}}
+      responses:
+        '201': {description: 送信・通知登録}
+  /supplier/delivery/stops:
+    get:
+      operationId: listDeliveryStops
+      parameters: [{name: date, in: query, required: true, schema: {type: string, format: date}}]
+      responses:
+        '200': {description: 本日の配達先}
+    post:
+      operationId: createDeliveryStop
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [address, scheduledDate], properties: {address: {type: string}, scheduledDate: {type: string, format: date}, timeWindowStart: {type: string, format: date-time}, timeWindowEnd: {type: string, format: date-time}}}}}}
+      responses:
+        '201': {description: 住所確認済の配達先}
+  /supplier/delivery/routes/optimize:
+    post:
+      operationId: optimizeSupplierRoute
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [stopIds], properties: {stopIds: {type: array, minItems: 2, items: {type: string, format: uuid}}}}}}}
+      responses:
+        '200': {description: 訪問案件との衝突を検査した停止順と警告}
+  /admin/suppliers/{supplierId}/review:
+    post:
+      operationId: reviewSupplier
+      parameters: [{$ref: '#/components/parameters/SupplierId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [decision], properties: {decision: {type: string, enum: [approved, rejected]}, reason: {type: string}}}}}}
+      responses:
+        '200': {description: 審査と監査イベント}
+  /admin/requests/{requestId}/resolve:
+    post:
+      operationId: resolveDispute
+      parameters: [{$ref: '#/components/parameters/RequestId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      description: 二名承認と証跡確認。申請者と最終承認者を分離。
+      responses:
+        '202': {description: 解決申請または最終確定}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    RequestId: {name: requestId, in: path, required: true, schema: {type: string, format: uuid}}
+    SupplierId: {name: supplierId, in: path, required: true, schema: {type: string, format: uuid}}
+    IdempotencyKey: {name: Idempotency-Key, in: header, required: true, schema: {type: string, minLength: 16, maxLength: 128}}
+  responses:
+    Conflict: {description: 状態、残枠、契約、同時受諾の競合}
+    Validation: {description: 入力または業務制約違反}
+    RateLimited: {description: 試行回数上限}
+  schemas:
+    Session:
+      type: object
+      required: [accessToken, role]
+      properties: {accessToken: {type: string}, role: {type: string, enum: [customer, supplier, admin]}}
+    ProfileInput:
+      type: object
+      required: [familyName, givenName, phone, address]
+      properties: {familyName: {type: string, minLength: 1}, givenName: {type: string, minLength: 1}, phone: {type: string}, email: {type: string, format: email}, address: {type: string, minLength: 5}, photoId: {type: string, format: uuid}}
+    Profile:
+      allOf:
+        - {$ref: '#/components/schemas/ProfileInput'}
+        - {type: object, required: [id], properties: {id: {type: string, format: uuid}}}
+    Plan:
+      type: object
+      required: [code, amountYen, trialDays]
+      properties: {code: {type: string, enum: [basic, standard, care]}, amountYen: {type: integer}, trialDays: {type: integer}, periodLimit: {type: integer}, dailyLimit: {type: integer}}
+    Setup:
+      type: object
+      required: [clientSecret, amountYen, trialEndsAt]
+      properties: {clientSecret: {type: string}, amountYen: {type: integer}, trialEndsAt: {type: string, format: date-time}}
+    Entitlement:
+      type: object
+      required: [planCode, status, periodStart, periodEnd, reservedCount, consumedCount]
+      properties: {planCode: {type: string}, status: {type: string}, periodStart: {type: string, format: date-time}, periodEnd: {type: string, format: date-time}, reservedCount: {type: integer}, consumedCount: {type: integer}, periodLimit: {type: integer}, dailyLimit: {type: integer}, dailyReservedAndConsumed: {type: integer}}
+    SupplierInput:
+      type: object
+      required: [legalName, contactName, phone, address, supplierType]
+      properties: {legalName: {type: string}, contactName: {type: string}, phone: {type: string}, email: {type: string, format: email}, address: {type: string}, supplierType: {type: string, enum: [company, sole_proprietor]}}
+    Supplier:
+      allOf:
+        - {$ref: '#/components/schemas/SupplierInput'}
+        - {type: object, required: [id, reviewStatus], properties: {id: {type: string, format: uuid}, reviewStatus: {type: string, enum: [invited_unverified, pending, approved, rejected]}}}
+    ServiceInput:
+      type: object
+      required: [name, category, description, areaCodes, durationMinutes, pricePolicy]
+      properties: {name: {type: string}, category: {type: string}, description: {type: string}, areaCodes: {type: array, items: {type: string}}, durationMinutes: {type: integer, minimum: 1}, pricePolicy: {type: string}, requiredQualifications: {type: array, items: {type: string}}}
+    Service:
+      allOf:
+        - {$ref: '#/components/schemas/ServiceInput'}
+        - {type: object, required: [id, supplierId, status, source], properties: {id: {type: string, format: uuid}, supplierId: {type: string, format: uuid}, status: {type: string, enum: [draft, pending_review, published, paused]}, source: {type: string, enum: [manual, mcp]}}}
+    RequestInput:
+      type: object
+      required: [serviceId, title, details, address, startsAt, endsAt, totalChargeYen]
+      properties: {serviceId: {type: string, format: uuid}, title: {type: string}, details: {type: string}, address: {type: string}, startsAt: {type: string, format: date-time}, endsAt: {type: string, format: date-time}, totalChargeYen: {type: integer, minimum: 0, description: 現場代金の確定済み内訳に基づく。未決定なら公開不可。}, photoIds: {type: array, items: {type: string, format: uuid}}}
+    Request:
+      allOf:
+        - {$ref: '#/components/schemas/RequestInput'}
+        - {type: object, required: [id, status, customerId], properties: {id: {type: string, format: uuid}, customerId: {type: string, format: uuid}, status: {type: string, enum: [draft, open, accepted, en_route, arrived, in_progress, awaiting_customer_confirmation, completed, cancelled, expired, disputed, resolved_completed, resolved_cancelled]}, acceptedSupplierId: {type: string, format: uuid}, assignedStaffId: {type: string, format: uuid}}}
+    QrIssue:
+      type: object
+      required: [token, expiresAt]
+      properties: {token: {type: string}, expiresAt: {type: string, format: date-time}}

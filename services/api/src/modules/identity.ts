@@ -105,6 +105,14 @@ async function deletionBlockers(c: Client, userId: string): Promise<string[]> {
   if (s.disputed > 0) b.push('対応中の紛争があります。解決後に退会できます');
   if (s.unpaid > 0) b.push(`未払いの報酬（¥${s.unpaid.toLocaleString('ja-JP')}）があります。振込完了後に退会できます`);
   if (s.owner_of > 0) b.push('組織のオーナーです。別のオーナーを指定してから退会してください');
+  const marketplace = (await c.query(`SELECT
+    (SELECT count(*)::int FROM marketplace.requests WHERE (customer_id=$1 OR assigned_staff_id=$1)
+      AND status NOT IN ('completed','cancelled','expired','resolved_completed','resolved_cancelled')) AS active,
+    (SELECT count(*)::int FROM marketplace.supplier_members WHERE user_id=$1 AND role='owner' AND active) AS owner_of,
+    (SELECT count(*)::int FROM marketplace.subscriptions WHERE customer_user_id=$1 AND status IN ('trialing','active','past_due')) AS subscriptions`, [userId])).rows[0];
+  if (marketplace.active > 0) b.push('暮らしの支援に進行中の依頼または紛争があります。解決後に退会できます');
+  if (marketplace.owner_of > 0) b.push('供給者のオーナーです。所有権を移管してから退会してください');
+  if (marketplace.subscriptions > 0) b.push('有効な会員契約があります。契約終了後に退会できます');
   return b;
 }
 
@@ -150,6 +158,9 @@ export const identityHandlers: HandlerMap = {
       await c.query('DELETE FROM job_favorites WHERE worker_id = $1', [u.id]);
       await c.query('DELETE FROM job_waitlist WHERE worker_id = $1', [u.id]);
       await c.query('DELETE FROM organization_members WHERE user_id = $1', [u.id]);
+      await c.query(`UPDATE marketplace.users SET family_name='退会済み',given_name='ユーザー',phone_hash=gen_random_bytes(32),
+        phone_ciphertext=$2,email=NULL,address_ciphertext=NULL,photo_object_key=NULL,phone_verified_at=NULL,deleted_at=now() WHERE id=$1`, [u.id,ctx.cipher.encrypt('（削除済み）')]);
+      await c.query('UPDATE marketplace.supplier_members SET active=false WHERE user_id=$1',[u.id]);
       await c.query(
         `UPDATE delivery_stops SET recipient_name_ciphertext = NULL, recipient_phone_ciphertext = NULL, note_ciphertext = NULL,
            address_ciphertext = $2, deleted_at = coalesce(deleted_at, now()) WHERE worker_id = $1`,

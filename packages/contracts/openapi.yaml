@@ -28,6 +28,7 @@ tags:
   - name: Admin
   - name: Webhooks
   - name: Voice
+  - name: Marketplace
 paths:
   /healthz:
     get:
@@ -1318,6 +1319,772 @@ paths:
         default: {$ref: '#/components/responses/Default'}
         '200': {description: 受理（重複も200）}
         '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /marketplace/plans:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplacePlans
+      parameters: []
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - checkoutAvailable
+                properties:
+                  items: &a1
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                  supplierTrialDays:
+                    type: integer
+                  pricingStatus:
+                    type: string
+                    minLength: 1
+                    maxLength: 80
+                  checkoutAvailable:
+                    type: boolean
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/me:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceMe
+      parameters: []
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/customer:
+    put:
+      tags:
+        - Marketplace
+      operationId: marketplaceRegisterCustomer
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  id: &a3
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+                    minLength: 1
+                    maxLength: 30
+                required:
+                  - id
+                  - role
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                familyName:
+                  type: string
+                  minLength: 1
+                  maxLength: 60
+                givenName:
+                  type: string
+                  minLength: 1
+                  maxLength: 60
+                email:
+                  type: string
+                  format: email
+                address:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+              required:
+                - familyName
+                - givenName
+                - address
+  /marketplace/catalog:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceCatalog
+      parameters: []
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: &a2
+                type: object
+                required:
+                  - items
+                properties:
+                  items: *a1
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/requests:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceRequests
+      parameters: []
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a2
+        default:
+          $ref: "#/components/responses/Default"
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplacePostRequest
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                properties: &a5
+                  id: *a3
+                  status:
+                    type: string
+                    minLength: 1
+                    maxLength: 60
+                required: &a6
+                  - id
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                serviceId: *a3
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+                details:
+                  type: string
+                  minLength: 1
+                  maxLength: 3000
+                address:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                areaCode:
+                  type: string
+                  minLength: 1
+                  maxLength: 40
+                startsAt: &a4
+                  type: string
+                  format: date-time
+                endsAt: *a4
+              required:
+                - serviceId
+                - title
+                - details
+                - address
+                - areaCode
+                - startsAt
+                - endsAt
+  /marketplace/requests/{requestId}:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceRequest
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: *a3
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/requests/{requestId}/accept:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceAccept
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: *a3
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: &a7
+                type: object
+                additionalProperties: false
+                properties: *a5
+                required: *a6
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                supplierId: *a3
+                staffId: *a3
+              required:
+                - supplierId
+                - staffId
+  /marketplace/requests/{requestId}/status:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceAdvance
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: *a3
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a7
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - en_route
+                    - arrived
+                    - in_progress
+                    - awaiting_customer_confirmation
+              required:
+                - status
+  /marketplace/requests/{requestId}/completion-token:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceIssueQr
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: *a3
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  requestId: *a3
+                  token:
+                    type: string
+                    minLength: 1
+                    maxLength: 128
+                  expiresAt: *a4
+                required:
+                  - requestId
+                  - token
+                  - expiresAt
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/requests/{requestId}/confirm:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceConfirmQr
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: *a3
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a7
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+              required:
+                - token
+  /marketplace/requests/{requestId}/cancel:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceCancel
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: *a3
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a7
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+              required:
+                - reason
+  /marketplace/requests/{requestId}/dispute:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceDispute
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: *a3
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a7
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+              required:
+                - reason
+  /marketplace/requests/{requestId}/messages:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceMessages
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: *a3
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a2
+        default:
+          $ref: "#/components/responses/Default"
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceSendMessage
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: *a3
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  id: *a3
+                required:
+                  - id
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 3000
+              required:
+                - body
+  /marketplace/suppliers/{supplierId}/feed:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceFeed
+      parameters:
+        - in: path
+          name: supplierId
+          required: true
+          schema: *a3
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a2
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/suppliers/{supplierId}/services:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceServices
+      parameters:
+        - in: path
+          name: supplierId
+          required: true
+          schema: *a3
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a2
+        default:
+          $ref: "#/components/responses/Default"
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceCreateService
+      parameters:
+        - in: path
+          name: supplierId
+          required: true
+          schema: *a3
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: 成功
+          content:
+            application/json:
+              schema: *a7
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+                category:
+                  type: string
+                  enum:
+                    - shopping_assist
+                    - delivery
+                    - companionship
+                    - household_help
+                    - healthcare
+                    - personal_care
+                description:
+                  type: string
+                  minLength: 1
+                  maxLength: 3000
+                areaCodes:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  uniqueItems: true
+                  items:
+                    type: string
+                    minLength: 1
+                    maxLength: 40
+                durationMinutes:
+                  type: integer
+                  minimum: 1
+                  maximum: 1440
+                pricePolicy:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+              required:
+                - name
+                - category
+                - description
+                - areaCodes
+                - durationMinutes
+                - pricePolicy
+  /marketplace/services/{serviceId}/review:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceReviewService
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: *a3
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a7
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                decision:
+                  type: string
+                  enum:
+                    - published
+                    - paused
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+              required:
+                - decision
+                - reason
+  /marketplace/checkout:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceCheckout
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a7
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                planCode:
+                  type: string
+                  enum:
+                    - basic
+                    - standard
+                    - care
+                    - supplier
+              required:
+                - planCode
+
+  /marketplace/suppliers:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceRegisterSupplier
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                properties:
+                  id: &a2
+                    type: string
+                    format: uuid
+                  status: &a1
+                    type: string
+                    minLength: 1
+                    maxLength: 500
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - legalName
+                - supplierType
+                - address
+              properties:
+                legalName: *a1
+                supplierType:
+                  type: string
+                  enum:
+                    - company
+                    - sole_proprietor
+                address: *a1
+  /marketplace/suppliers/{supplierId}/members:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceSupplierMembers
+      parameters:
+        - in: path
+          name: supplierId
+          required: true
+          schema: *a2
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/suppliers/{supplierId}/availability:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceAvailability
+      parameters:
+        - in: path
+          name: supplierId
+          required: true
+          schema: *a2
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                properties:
+                  id: *a2
+                  status: *a1
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - staffId
+                - startsAt
+                - endsAt
+              properties:
+                staffId: *a2
+                startsAt: &a3
+                  type: string
+                  format: date-time
+                endsAt: *a3
 
 components:
   securitySchemes:

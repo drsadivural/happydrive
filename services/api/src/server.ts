@@ -28,6 +28,7 @@ import { learningHandlers } from './modules/learning.js';
 import { organizationHandlers } from './modules/organizations.js';
 import { adminHandlers } from './modules/admin.js';
 import { voiceHandlers } from './modules/voice/handlers.js';
+import { marketplaceHandlers } from './modules/marketplace/handlers.js';
 
 export interface BuildOptions {
   cfg?: Config;
@@ -75,6 +76,7 @@ export const allHandlers: HandlerMap = {
   ...organizationHandlers,
   ...adminHandlers,
   ...voiceHandlers,
+  ...marketplaceHandlers,
 };
 
 /** Strips query strings (may carry coordinates) and signed tokens from logged URLs. */

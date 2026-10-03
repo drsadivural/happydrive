@@ -20,3 +20,7 @@ xcuserdata/
 
 # Claude Code local state (agent worktrees, settings)
 .claude/
+
+# Browser verification artifacts
+/test-results/
+/playwright-report/
