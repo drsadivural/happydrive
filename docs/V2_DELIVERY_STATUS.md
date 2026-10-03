@@ -28,7 +28,7 @@ This branch is an implementation candidate, **not a production release**. Produc
 
 ## Work still required before release
 
-1. Finish the user's truncated requirement: “Login must support …”. Additional login methods and account recovery/linking need a confirmed specification.
+1. The user clarified Gmail/Google login. Both clients now have Google sign-in and explicit linking, with SMS phone confirmation and existing TOTP preserved. Configure the Google OAuth clients and verify live web/device login before release; see `docs/GOOGLE_SIGN_IN.md`. Broader account recovery remains unfinished.
 2. Decide supplier pricing; whether customer subscriptions include work; service charges, tax, travel/material charges, supplier compensation, fees, cancellations/refunds and plan-change timing. See `docs/spec/v2/04_BILLING.md`. No guessed prices or live payment attempts are implemented.
 3. Implement and validate Stripe setup/3DS, Billing/Connect, authoritative subscription synchronization, signature-checked ordered/deduplicated webhooks, quotas per real billing period, receipts, transfers, refunds and reconciliation. The current checkout endpoint deliberately returns unavailable.
 4. Connect an actual SMS provider, APNs credentials and production object storage; validate delivery/failure/recovery behavior. SMS provider adapters remain the existing console/none choices.

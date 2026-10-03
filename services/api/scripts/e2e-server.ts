@@ -2,6 +2,7 @@
 import { createPool } from '../src/db/pool.js';
 import { migrate } from '../src/db/migrate.js';
 import { testConfig, CapturingSms, loginWorker, call } from '../test/helpers.js';
+import { googleFixture,googleConfig } from '../test/google-fixture.js';
 import { buildApp } from '../src/server.js';
 
 const databaseUrl=process.env.HD_E2E_DATABASE_URL;
@@ -10,9 +11,11 @@ const db=createPool(databaseUrl);
 await db.query('DROP SCHEMA IF EXISTS marketplace CASCADE; DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
 await migrate(db);await db.end();
 const sms=new CapturingSms();
-const built=await buildApp({cfg:testConfig({databaseUrl,rateLimitPerMinute:10000}),sms});
+const google=await googleFixture();
+const built=await buildApp({cfg:testConfig({databaseUrl,rateLimitPerMinute:10000,google:googleConfig}),sms,googleVerifier:google.verifier});
 const env={...built,sms,close:()=>built.app.close()};
 const fixtures:Record<string,unknown>={};
+env.app.post('/__test/google-token',async(req)=>{const b=req.body as {nonce:string;subject:string};return {token:await google.sign(b.nonce,{sub:b.subject,email:b.subject+'@gmail.com',email_verified:true,name:'Google テスト利用者'})};});
 env.app.get('/__test/fixtures',async()=>fixtures);
 env.app.get('/__test/otp/:phone',async(req)=>({code:env.sms.codes.get((req.params as {phone:string}).phone)}));
 await env.app.ready();

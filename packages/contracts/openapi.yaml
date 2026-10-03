@@ -2086,6 +2086,177 @@ paths:
                   format: date-time
                 endsAt: *a3
 
+  /auth/google/challenge:
+    post:
+      tags:
+        - Auth
+      operationId: googleChallenge
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - platform
+              properties:
+                platform:
+                  type: string
+                  enum:
+                    - web
+                    - ios
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: &a1
+                type: object
+                additionalProperties: false
+                required:
+                  - challengeId
+                  - nonce
+                  - clientId
+                  - expiresAt
+                properties:
+                  challengeId:
+                    type: string
+                    format: uuid
+                  nonce:
+                    type: string
+                  clientId:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+        default:
+          $ref: "#/components/responses/Default"
+  /auth/google/verify:
+    post:
+      tags:
+        - Auth
+      operationId: googleVerify
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: &a2
+              type: object
+              additionalProperties: false
+              required:
+                - challengeId
+                - idToken
+              properties:
+                challengeId:
+                  type: string
+                  format: uuid
+                idToken:
+                  type: string
+                  minLength: 20
+                  maxLength: 16000
+                deviceName:
+                  type: string
+                  maxLength: 100
+      responses:
+        '202':
+          description: 既存の二段階認証を要求
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebLoginChallenge'
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        default:
+          $ref: "#/components/responses/Default"
+  /auth/google/link/challenge:
+    post:
+      tags:
+        - Auth
+      operationId: googleLinkChallenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - platform
+              properties:
+                platform:
+                  type: string
+                  enum:
+                    - web
+                    - ios
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: *a1
+        default:
+          $ref: "#/components/responses/Default"
+  /auth/google/link:
+    post:
+      tags:
+        - Auth
+      operationId: googleLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: *a2
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        default:
+          $ref: "#/components/responses/Default"
+  /auth/phone/link:
+    post:
+      tags:
+        - Auth
+      operationId: linkPhone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - phone
+                - code
+              properties:
+                phone:
+                  type: string
+                  pattern: ^(\+81|0)[0-9]{9,10}$
+                code:
+                  type: string
+                  pattern: ^[0-9]{6}$
+                deviceName:
+                  type: string
+                  maxLength: 100
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        default:
+          $ref: "#/components/responses/Default"
+
 components:
   securitySchemes:
     bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}

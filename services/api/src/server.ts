@@ -15,6 +15,8 @@ import { createPayouts, type PayoutProvider } from './adapters/payouts.js';
 import { loadOperations } from './openapi/loader.js';
 import { authenticate } from './auth/tokens.js';
 import type { AppContext, HandlerMap, HdRequest } from './context.js';
+import { verifyGoogleToken, type GoogleVerifier } from './auth/google.js';
+import { googleAuthHandlers } from './modules/google-auth.js';
 import { authHandlers } from './modules/auth.js';
 import { identityHandlers } from './modules/identity.js';
 import { deliveryHandlers } from './modules/delivery.js';
@@ -32,6 +34,7 @@ import { marketplaceHandlers } from './modules/marketplace/handlers.js';
 
 export interface BuildOptions {
   cfg?: Config;
+  googleVerifier?: GoogleVerifier;
   db?: pg.Pool;
   storage?: StorageAdapter;
   sms?: SmsAdapter;
@@ -64,6 +67,7 @@ const systemHandlers: HandlerMap = {
 export const allHandlers: HandlerMap = {
   ...systemHandlers,
   ...authHandlers,
+  ...googleAuthHandlers,
   ...identityHandlers,
   ...deliveryHandlers,
   ...jobHandlers,
@@ -110,6 +114,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<{ app: FastifyI
   const ctx: AppContext = {
     cfg,
     db,
+    googleVerifier: opts.googleVerifier ?? verifyGoogleToken,
     cipher: new FieldCipher(cfg.dataEncryptionKey, cfg.dataHmacKey),
     storage: opts.storage ?? createStorage(cfg),
     sms: opts.sms ?? createSms(cfg, app.log),

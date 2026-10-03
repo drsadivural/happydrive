@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/:path*',
-        headers: securityHeaders({ isDev, https: !isDev && resolveSecure(), imageOrigins: imageOriginsFromEnv() }),
+        headers: securityHeaders({ googleSignIn: true, isDev, https: !isDev && resolveSecure(), imageOrigins: imageOriginsFromEnv() }),
       },
     ];
   },

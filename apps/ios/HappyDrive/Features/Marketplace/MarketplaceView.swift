@@ -91,6 +91,7 @@ struct MarketplaceRootView: View {
                 if section == "requests" { Section("依頼履歴") { if requests.isEmpty { Text("依頼はまだありません。") }; ForEach(requests) { request in requestLink(request) } } }
                 if section == "account" {
                     Section("プロフィール") {
+                        GoogleSignInButton(link: true)
                         if let profile = account?.profile { Text("\(profile.familyName) \(profile.givenName)") }
                         else {
                             Button("電話番号をSMSで確認") { showPhoneLogin = true }
@@ -171,20 +172,21 @@ struct MarketplacePhoneLogin: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("電話番号でログイン") {
+                if env.session.phase != .signedIn { Section { GoogleSignInButton(onSuccess: { dismiss() }) } }
+                Section(env.session.phase == .signedIn ? "電話番号を確認" : "電話番号でログイン") {
                     TextField("09012345678",text:$phone).keyboardType(.phonePad).textContentType(.telephoneNumber).disabled(sent)
                     if sent { TextField("SMSの6桁の確認コード",text:$code).keyboardType(.numberPad).textContentType(.oneTimeCode) }
                     if let error { Text(error).foregroundStyle(HDColor.danger) }
                     Button(sent ? "ログイン" : "確認コードを送信") { Task { await submit() } }.disabled(busy || phone.isEmpty || (sent && code.count != 6))
                     if sent { Button("番号を変更・再送信") { if Date() >= resendAt { sent = false; code = "" } else { error = "再送信まで少しお待ちください" } } }
                 }
-            }.navigationTitle("電話番号の確認").toolbar { Button("閉じる") { dismiss() } }
+            }.navigationTitle("ログイン・電話番号の確認").toolbar { Button("閉じる") { dismiss() } }
         }
     }
     private func submit() async {
         guard !busy else { return }; busy = true; error = nil; defer { busy = false }
         do {
-            if sent { let result = try await env.api.verifyOTP(phone:phone,code:code,deviceName:SessionStore.deviceName); env.session.signedIn(result); dismiss() }
+            if sent { let result = try await (env.session.phase == .signedIn ? env.api.linkPhone(phone:phone,code:code,deviceName:SessionStore.deviceName) : env.api.verifyOTP(phone:phone,code:code,deviceName:SessionStore.deviceName)); env.session.signedIn(result); dismiss() }
             else { let r = try await env.api.requestOTP(phone:phone); sent = true; resendAt = Date().addingTimeInterval(TimeInterval(r.resendAfterSeconds)) }
         } catch { self.error = error.hdUserMessage }
     }

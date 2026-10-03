@@ -20,6 +20,7 @@ export interface Config {
   trustProxy: boolean | number | string;
   rateLimitPerMinute: number;
   sms: { provider: 'console' | 'none' };
+  google?: { webClientId?: string; iosClientId?: string };
   reviewAccount?: { phone: string; code: string };
   storage:
     | { provider: 'local'; dir: string; signingKey: Buffer }
@@ -167,6 +168,7 @@ export function loadConfig(): Config {
     corsOrigins: (process.env.CORS_ORIGINS ?? 'http://localhost:3001,http://localhost:3002').split(',').filter(Boolean),
     sms: { provider: smsProvider },
     reviewAccount,
+    google: { webClientId: process.env.GOOGLE_WEB_CLIENT_ID || undefined, iosClientId: process.env.GOOGLE_IOS_CLIENT_ID || undefined },
     storage,
     payouts: {
       provider: payoutProvider,

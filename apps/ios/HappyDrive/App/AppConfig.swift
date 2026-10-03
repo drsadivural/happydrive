@@ -3,6 +3,7 @@ import HappyDriveCore
 
 /// ビルド設定（xcconfig → Info.plist）から読む値
 struct AppConfig: Sendable {
+    var googleClientId: String? = nil
     let apiBaseURL: URL
     let termsVersion: String
     let privacyVersion: String
@@ -35,6 +36,7 @@ struct AppConfig: Sendable {
         let build = (bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String) ?? "-"
 
         return AppConfig(
+            googleClientId: string("HDGoogleClientID"),
             apiBaseURL: apiBaseURL,
             termsVersion: string("HDTermsVersion") ?? "unset",
             privacyVersion: string("HDPrivacyVersion") ?? "unset",

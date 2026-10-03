@@ -13,6 +13,7 @@ export interface AppContext {
   storage: StorageAdapter;
   sms: SmsAdapter;
   payouts: PayoutProvider;
+  googleVerifier: import('./auth/google.js').GoogleVerifier;
   log: FastifyBaseLogger;
 }
 
