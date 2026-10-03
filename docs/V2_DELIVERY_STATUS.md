@@ -24,7 +24,7 @@ This branch is an implementation candidate, **not a production release**. Produc
 - API concurrency tests cover 100 concurrent Basic posts and 100 eligible supplier acceptance attempts, plus QR replay/expiry/reissue, outsider access, Care limits and idempotency.
 - The contract scenario exercises every added API operation and validates documented response schemas.
 - Desktop and mobile Chromium browser tests cover SMS login, service selection, posting/history/cancellation, plan gate, supplier mode/service submission, tenant allowlist and logout. They do **not** cover all acceptance requirements or real iOS Safari.
-- Linux Swift package tests verify models, QR parsing and expiry. Full SwiftUI compilation requires the macOS CI job. Real-device, TestFlight and signed distribution checks have not been performed.
+- Linux Swift package tests verify models, QR parsing and expiry. The macOS CI job passed the full iOS Simulator app build and HappyAvatarKit simulator tests. Real-device, TestFlight and signed distribution checks have not been performed.
 
 ## Work still required before release
 
@@ -49,12 +49,12 @@ Do not market this candidate as fully tested, product-ready or App Store-ready. 
 - Swift core: 149 tests passed, zero failures.
 - Shared web library: 69 tests passed; supplier/customer web: 27 passed; admin web: 14 passed.
 - Browser: 4 connected desktop/mobile Chromium tests passed, with screenshots and no captured page exceptions in the customer flow.
-- API lint/type/build and web lint/type checks passed. Web production builds are rerun before candidate publication.
-- Full iOS app compilation and remote CI evidence are pending the draft PR checks. Signed archive, physical-device validation and TestFlight remain unperformed.
+- API lint/type/build, web lint/type checks and both web production builds passed.
+- Full iOS Simulator app compilation and HappyAvatarKit simulator tests passed in remote CI at commit 14fac95. Signed archive, physical-device validation and TestFlight remain unperformed.
 
 ## Remote CI findings
 
-The first draft PR run passed contracts, API, web, browser and Swift-core jobs. macOS compilation identified an optional-string grouping error in the new workflow screen; the follow-up commit corrects it and reruns CI.
+The first draft PR run passed contracts, API, web, browser and Swift-core jobs. macOS compilation identified an optional-string grouping error in the new workflow screen; the follow-up commit corrects it. Run 37124011627 passed contracts, API, web, browser, Swift-core and full iOS app jobs; only security failed. Subsequent test-only changes strengthen acceptance concurrency coverage to 100 distinct supplier accounts.
 
 The security job reports CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm in the transitive development dependency `braces@3.0.3` through Next's ESLint plugin. Both configured and public npm registries report 3.0.3 as latest; the GitHub advisory states no patched version is available. No audit exemption or lowered severity threshold has been introduced. This remains a release blocker pending a verified upstream patch or reviewed replacement of the affected toolchain.
 
