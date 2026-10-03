@@ -1,4 +1,5 @@
 // Test-only HTTP harness; refuses any database whose name does not end in _e2e.
+import * as OTPAuth from 'otpauth';
 import { createPool } from '../src/db/pool.js';
 import { migrate } from '../src/db/migrate.js';
 import { testConfig, CapturingSms, loginWorker, call } from '../test/helpers.js';
@@ -15,7 +16,9 @@ const google=await googleFixture();
 const built=await buildApp({cfg:testConfig({databaseUrl,rateLimitPerMinute:10000,google:googleConfig}),sms,googleVerifier:google.verifier});
 const env={...built,sms,close:()=>built.app.close()};
 const fixtures:Record<string,unknown>={};
+const mfaFixtures=new Map<string,OTPAuth.TOTP>();
 env.app.post('/__test/google-token',async(req)=>{const b=req.body as {nonce:string;subject:string};return {token:await google.sign(b.nonce,{sub:b.subject,email:b.subject+'@gmail.com',email_verified:true,name:'Google テスト利用者'})};});
+env.app.get('/__test/mfa/:subject',async(req)=>({code:mfaFixtures.get((req.params as {subject:string}).subject)?.generate()}));
 env.app.get('/__test/fixtures',async()=>fixtures);
 env.app.get('/__test/otp/:phone',async(req)=>({code:env.sms.codes.get((req.params as {phone:string}).phone)}));
 await env.app.ready();
@@ -37,6 +40,12 @@ for (const [role,phone] of [['customer','09011112222'],['supplier','09033334444'
       VALUES ($1,'買い物支援','shopping_assist','近所での買い物をお手伝いします',ARRAY['13101'],60,'試験用・請求なし','published','manual')`,[p.id]);
     fixtures.supplier={phone,userId:s.userId,supplierId:p.id};
   }
+}
+for(const suffix of ['desktop','mobile']) {
+  const subject='browser-google-mfa-'+suffix;const email=subject+'@gmail.com';const secret=new OTPAuth.Secret({size:20});
+  const user=(await env.ctx.db.query(`INSERT INTO app_users(display_name,email,totp_secret_ciphertext,mfa_enabled,roles) VALUES ('Google MFA テスト',$1,$2,true,'{worker}') RETURNING id`,[email,env.ctx.cipher.encrypt(secret.base32)])).rows[0];
+  await env.ctx.db.query('INSERT INTO google_identities(subject_hash,user_id) VALUES ($1,$2)',[env.ctx.cipher.blindIndex('google:'+subject),user.id]);
+  mfaFixtures.set(subject,new OTPAuth.TOTP({issuer:'HappyDrive',label:email,secret}));
 }
 await env.ctx.db.query('DELETE FROM otp_challenges');
 

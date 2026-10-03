@@ -245,14 +245,17 @@ export const authHandlers: HandlerMap = {
     const key = `mfa:${userId}`;
     if ((await countAttempts(ctx, key, WEB_LOGIN_WINDOW_MIN)) >= WEB_LOGIN_MAX_FAILS) throw tooMany('認証コードの入力回数が上限に達しました。15分後にお試しください');
     const result = await withTx(ctx.db, async (c) => {
-      const r = await c.query('SELECT email, totp_secret_ciphertext, last_totp_step, mfa_enabled, deleted_at FROM app_users WHERE id = $1 FOR UPDATE', [userId]);
+      const r = await c.query('SELECT email, totp_secret_ciphertext, last_totp_step, mfa_enabled, deleted_at, suspended_at FROM app_users WHERE id = $1 FOR UPDATE', [userId]);
       const u = r.rows[0];
       if (!u || u.deleted_at || !u.totp_secret_ciphertext) throw unauthorized();
+      if (u.suspended_at) throw forbidden('アカウントは停止されています', 'account_suspended');
+      const attempts = await c.query(`SELECT count(*)::int AS n FROM auth_attempts WHERE key=$1 AND created_at>now()-make_interval(mins=>$2)`, [key,WEB_LOGIN_WINDOW_MIN]);
+      if (attempts.rows[0].n >= WEB_LOGIN_MAX_FAILS) throw tooMany('認証コードの入力回数が上限に達しました。15分後にお試しください');
       const totp = totpFor(ctx.cipher.decrypt(u.totp_secret_ciphertext), u.email);
       const delta = totp.validate({ token: b.code, window: 1 });
       const step = Math.floor(Date.now() / 30_000) + (delta ?? 0);
       if (delta === null || (u.last_totp_step !== null && step <= Number(u.last_totp_step))) {
-        await ctx.db.query('INSERT INTO auth_attempts(key) VALUES ($1)', [key]);
+        await c.query('INSERT INTO auth_attempts(key) VALUES ($1)', [key]);
         return null;
       }
       await c.query('UPDATE app_users SET last_totp_step = $2, mfa_enabled = true WHERE id = $1', [userId, step]);

@@ -67,7 +67,8 @@ describe('Google authentication',()=>{
   it('persists invalid MFA attempts and locks repeated failures',async()=>{
     const owner=await webUser(env);const token=await import('../src/auth/tokens.js').then(m=>m.signMfaToken(env.ctx,owner.userId));
     const invalid=owner.totp.generate()==='000000'?'111111':'000000';
-    for(let i=0;i<10;i++)expect((await call(env,null,'POST','/auth/web/mfa/verify',{mfaToken:token,code:invalid})).status).toBe(401);
+    const attempts=await Promise.all(Array.from({length:20},()=>call(env,null,'POST','/auth/web/mfa/verify',{mfaToken:token,code:invalid})));
+    expect(attempts.filter(r=>r.status===401)).toHaveLength(10);expect(attempts.filter(r=>r.status===429)).toHaveLength(10);
     expect((await call(env,null,'POST','/auth/web/mfa/verify',{mfaToken:token,code:invalid})).status).toBe(429);
   });
   it('verified phone attaches to Google session, cannot take another account’s phone',async()=>{

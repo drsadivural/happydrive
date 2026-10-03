@@ -38,3 +38,32 @@ final class GoogleOAuthTests: XCTestCase {
         XCTAssertThrowsError(try GoogleOAuthFlow(clientId: client, state: state, verifier: String(repeating: "!", count: 43)))
     }
 }
+
+final class GoogleAuthAPITests: XCTestCase {
+    func testGoogleMFAStoresNoSessionUntilSecondFactorSucceeds() async throws {
+        let store = InMemoryTokenStore()
+        let transport = MockTransport { req in
+            if req.url.path.hasSuffix("/auth/google/verify") { return json(202,["mfaToken":"pending","mfaEnrollmentRequired":false]) }
+            return json(200,["tokens":tokensJSON(access:"GOOGLE",refresh:"REFRESH"),"user":["id":"u","displayName":"利用者","verificationStatus":"unsubmitted"],"isNewUser":false])
+        }
+        let api = HappyDriveAPI(client: APIClient(baseURL:testBaseURL,transport:transport,tokenStore:store))
+        let result = try await api.googleSignIn(challengeId:"challenge",idToken:"id-token",deviceName:"iPhone")
+        guard case .mfa(let challenge) = result else { return XCTFail("MFA challenge expected") }
+        XCTAssertNil(store.loadTokens()); XCTAssertNil(transport.requests.first?.headers["Authorization"])
+        _ = try await api.verifyGoogleMFA(challenge:challenge,code:"123456")
+        XCTAssertEqual(store.loadTokens()?.accessToken,"GOOGLE")
+        XCTAssertEqual(transport.requests.last?.url.path,"/v1/auth/web/mfa/verify")
+    }
+    func testGoogleLinkRequiresExistingBearerAndPreservesUser() async throws {
+        let store = InMemoryTokenStore(tokens:tokens(access:"EXISTING",refresh:"OLD"))
+        let transport = MockTransport { req in
+            XCTAssertEqual(req.headers["Authorization"],"Bearer EXISTING")
+            return json(200,["tokens":tokensJSON(access:"LINKED",refresh:"NEW"),"user":["id":"original","displayName":"利用者","verificationStatus":"unsubmitted"],"isNewUser":false])
+        }
+        let api = HappyDriveAPI(client: APIClient(baseURL:testBaseURL,transport:transport,tokenStore:store))
+        let result = try await api.googleSignIn(challengeId:"challenge",idToken:"id-token",deviceName:"iPhone",link:true)
+        guard case .authenticated(let auth) = result else { return XCTFail("Authenticated link expected") }
+        XCTAssertEqual(auth.user.id,"original"); XCTAssertEqual(store.loadTokens()?.accessToken,"LINKED")
+        XCTAssertEqual(transport.requests.first?.url.path,"/v1/auth/google/link")
+    }
+}

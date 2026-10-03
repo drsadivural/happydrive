@@ -57,14 +57,7 @@ test('Google sign-in, phone verification and returning to the same account',asyn
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   const subject=`browser-google-${test.info().project.name}`;
   // Google itself is a test adapter here; real signed JWTs are verified by the API.
-  await page.route('**/__test/google-token',async route=>{const res=await page.request.post('http://127.0.0.1:8095/__test/google-token',{data:route.request().postDataJSON()});await route.fulfill({response:res});});
-  await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({contentType:'application/javascript',body:`
-    window.google={accounts:{id:{initialize:function(options){window.googleOptions=options;},renderButton:function(el){
-      const button=document.createElement('button');button.textContent='Googleテストアカウント';button.onclick=async function(){
-        const response=await fetch('/__test/google-token',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({nonce:window.googleOptions.nonce,subject:'${subject}'})});
-        window.googleOptions.callback({credential:(await response.json()).token});
-      };el.appendChild(button);
-    }}}};` }));
+  await fakeGoogle(page,subject);
   await page.goto('/customer-login');await page.getByRole('button',{name:'Gmail・Googleでログイン',exact:true}).click();await page.getByRole('button',{name:'Googleテストアカウント',exact:true}).click();await expect(page).toHaveURL(/\/marketplace/);
   await expect(page.getByRole('heading',{name:'顧客の登録',exact:true})).toBeVisible();
   await page.getByRole('link',{name:'電話番号をSMSで確認',exact:true}).click();
@@ -76,4 +69,25 @@ test('Google sign-in, phone verification and returning to the same account',asyn
   if(test.info().project.name==='mobile')await page.getByRole('button',{name:'メニュー',exact:true}).click();await page.getByRole('button',{name:'ログアウト',exact:true}).click();
   await page.getByRole('button',{name:'Gmail・Googleでログイン',exact:true}).click();await page.getByRole('button',{name:'Googleテストアカウント',exact:true}).click();await expect(page).toHaveURL(/\/marketplace/);await expect(page.getByRole('heading',{name:'毎日の暮らしに、頼れる支援を。'})).toBeVisible();await expect(page.getByRole('heading',{name:'顧客の登録',exact:true})).toHaveCount(0);
   const cookies=await page.context().cookies();expect(cookies.filter(c=>c.name.endsWith('_at')||c.name.endsWith('_rt')).every(c=>c.httpOnly)).toBe(true);expect(errors).toEqual([]);
+});
+
+async function fakeGoogle(page:Page,subject:string) {
+  await page.route('**/__test/google-token',async route=>{const res=await page.request.post('http://127.0.0.1:8095/__test/google-token',{data:route.request().postDataJSON()});await route.fulfill({response:res});});
+  await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({contentType:'application/javascript',body:`
+    window.google={accounts:{id:{initialize:function(options){window.googleOptions=options;},renderButton:function(el){
+      const button=document.createElement('button');button.textContent='Googleテストアカウント';button.onclick=async function(){
+        const response=await fetch('/__test/google-token',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({nonce:window.googleOptions.nonce,subject:'${subject}'})});
+        window.googleOptions.callback({credential:(await response.json()).token});
+      };el.appendChild(button);
+    }}}};` }));
+}
+
+test('Google login preserves the second-factor step',async({page})=>{
+  const subject='browser-google-mfa-'+test.info().project.name;await fakeGoogle(page,subject);
+  await page.goto('/customer-login');await page.getByRole('button',{name:'Gmail・Googleでログイン',exact:true}).click();await page.getByRole('button',{name:'Googleテストアカウント',exact:true}).click();await expect(page).toHaveURL(/login\?google=mfa/);
+  await expect(page.getByRole('heading',{name:'二段階認証',exact:true})).toBeVisible();
+  expect((await page.context().cookies()).some(c=>c.name.endsWith('_at'))).toBe(false);
+  const otp=await page.request.get('http://127.0.0.1:8095/__test/mfa/'+subject);await page.getByLabel(/^確認コード/).fill((await otp.json()).code);
+  await page.getByRole('button',{name:'確認してログイン',exact:true}).click();await expect(page).toHaveURL(/\/marketplace/);
+  expect((await page.context().cookies()).some(c=>c.name.endsWith('_at') && c.httpOnly)).toBe(true);
 });

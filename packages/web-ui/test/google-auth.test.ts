@@ -36,6 +36,6 @@ describe('Google BFF security',()=>{
  });
  it('permits only Google GIS resources and popup communication when explicitly enabled',()=>{
   const ordinary=buildCsp({isDev:false});expect(ordinary).not.toContain('accounts.google.com');expect(ordinary).toContain("frame-src 'none'");
-  const google=buildCsp({isDev:false,googleSignIn:true});expect(google).toContain('https://accounts.google.com/gsi/client');expect(google).toContain('frame-src https://accounts.google.com/gsi/');expect(google).not.toContain("'unsafe-eval'");expect(securityHeaders({isDev:false,googleSignIn:true}).find(h=>h.key==='Cross-Origin-Opener-Policy')?.value).toBe('same-origin-allow-popups');
+  const google=buildCsp({isDev:false,googleSignIn:true});expect(google).toContain('https://accounts.google.com/gsi/client');expect(google).toContain('frame-src https://accounts.google.com/gsi/');expect(google).not.toContain("'unsafe-eval'");expect(securityHeaders({isDev:false,googleSignIn:true}).find(h=>h.key==='Cross-Origin-Opener-Policy')?.value).toBe('same-origin-allow-popups');expect(securityHeaders({isDev:false,googleSignIn:true}).find(h=>h.key==='Referrer-Policy')?.value).toBe('strict-origin-when-cross-origin');
  });
 });

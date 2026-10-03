@@ -45,7 +45,7 @@ export function buildCsp({ isDev, imageOrigins = [], https = !isDev, googleSignI
 export function securityHeaders(options: SecurityHeaderOptions): { key: string; value: string }[] {
   const headers = [
     { key: 'Content-Security-Policy', value: buildCsp(options) },
-    { key: 'Referrer-Policy', value: 'same-origin' },
+    { key: 'Referrer-Policy', value: options.googleSignIn ? (options.isDev ? 'no-referrer-when-downgrade' : 'strict-origin-when-cross-origin') : 'same-origin' },
     { key: 'X-Frame-Options', value: 'DENY' },
     { key: 'X-Content-Type-Options', value: 'nosniff' },
     { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()' },

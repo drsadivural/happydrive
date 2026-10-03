@@ -43,7 +43,7 @@ This branch is an implementation candidate, **not a production release**. Produc
 
 Do not market this candidate as fully tested, product-ready or App Store-ready. Passing the listed automated checks establishes only those checks.
 
-## Local check results (2026-10-03)
+## Initial v2 check results (before the Google login follow-up)
 
 - API: 82 tests passed across 11 suites, including v2 contract and concurrency tests.
 - Swift core: 149 tests passed, zero failures.
@@ -59,3 +59,15 @@ The first draft PR run passed contracts, API, web, browser and Swift-core jobs. 
 The security job reports CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm in the transitive development dependency `braces@3.0.3` through Next's ESLint plugin. Both configured and public npm registries report 3.0.3 as latest; the GitHub advisory states no patched version is available. No audit exemption or lowered severity threshold has been introduced. This remains a release blocker pending a verified upstream patch or reviewed replacement of the affected toolchain.
 
 Advisory: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
+
+
+## Google login follow-up verification (2026-10-03)
+
+The clarified Gmail/Google login requirement is implemented in web and iOS. Configuration and explicit verification boundaries are in `docs/GOOGLE_SIGN_IN.md`. No live OAuth clients have been supplied, and no production Google login or deployment has been performed.
+
+- API: 91 tests passed across 12 suites. Following the final MFA concurrency/suspension changes, 25 focused authentication tests passed, including 20 parallel incorrect MFA attempts limited to 10 failures before lockout.
+- Swift core: 155 tests passed, including the PKCE vector, hostile callbacks and session persistence only after successful MFA.
+- Shared web: 75 tests passed; partner web: 27 passed. Both web production builds, API build, lint/type checks and contract checks passed.
+- Browser: 8 connected desktop/mobile tests passed, including Google login, phone linking/profile registration, returning to the same account and Google + TOTP login. External Google UI and SMS remain test adapters.
+- Remote run 37126614344 (8242f1a) passed contracts, API, web, browser, Swift core and full iOS Simulator app build/HappyAvatarKit tests. The follow-up strengthens test coverage and MFA locking and reruns CI. The iOS app source has not changed since the successful build.
+- Security remains blocked by the upstream advisory above. Signed Apple distribution and live provider/device acceptance are still outstanding.
