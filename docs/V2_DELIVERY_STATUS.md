@@ -51,3 +51,11 @@ Do not market this candidate as fully tested, product-ready or App Store-ready. 
 - Browser: 4 connected desktop/mobile Chromium tests passed, with screenshots and no captured page exceptions in the customer flow.
 - API lint/type/build and web lint/type checks passed. Web production builds are rerun before candidate publication.
 - Full iOS app compilation and remote CI evidence are pending the draft PR checks. Signed archive, physical-device validation and TestFlight remain unperformed.
+
+## Remote CI findings
+
+The first draft PR run passed contracts, API, web, browser and Swift-core jobs. macOS compilation identified an optional-string grouping error in the new workflow screen; the follow-up commit corrects it and reruns CI.
+
+The security job reports CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm in the transitive development dependency `braces@3.0.3` through Next's ESLint plugin. Both configured and public npm registries report 3.0.3 as latest; the GitHub advisory states no patched version is available. No audit exemption or lowered severity threshold has been introduced. This remains a release blocker pending a verified upstream patch or reviewed replacement of the affected toolchain.
+
+Advisory: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm

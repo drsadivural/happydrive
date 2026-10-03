@@ -121,7 +121,7 @@ struct MarketplaceRequestView: View {
     }
     private func mutate(_ action:String,body:[String:String]) async {
         guard !busy,env.network.isOnline else{return};busy = true;error = nil;defer{busy = false}
-        let scope = action + String(data:(try? JSONSerialization.data(withJSONObject:body,options:.sortedKeys)) ?? Data(),encoding:.utf8) ?? action
+        let scope = action + (String(data:(try? JSONSerialization.data(withJSONObject:body,options:.sortedKeys)) ?? Data(),encoding:.utf8) ?? "")
         let key = keys[scope] ?? IdempotencyKey.generate();keys[scope] = key
         do { let _:MarketplaceResult = try await env.api.client.send(try .json(.post,path+"/"+action,body:body,idempotencyKey:key));keys.removeValue(forKey:scope);token = nil;await load() }
         catch { self.error = error.hdUserMessage }
