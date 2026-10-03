@@ -11,16 +11,28 @@ struct MarketplaceAcceptView: View {
     let request: MarketplaceRequest
     let supplierId: String
     @State private var staffId = ""
+    @State private var members: [Member] = []
+    private struct Member: Decodable, Sendable, Identifiable { let id: String; let familyName: String; let givenName: String }
     @State private var busy = false
     @State private var error: String?
     @State private var key = IdempotencyKey.generate()
     var body: some View {
         Form {
             Section(request.title) { Text(request.areaCode); Text(HDFormat.dateTime(request.startsAt)); Text("受諾前は詳細住所を表示しません。") }
-            Section("担当者を指定") { TextField("担当者ID",text:$staffId).textInputAutocapitalization(.never); Text("資格・対応時間・予定を確認して受諾します。") }
+            Section("担当者を指定") {
+                if members.isEmpty { Text("担当者を読み込んでいます…") }
+                Picker("担当者", selection: $staffId) { ForEach(members) { member in Text("\(member.familyName) \(member.givenName)").tag(member.id) } }
+                Text("資格・対応時間・予定を確認して受諾します。")
+            }
             if let error { Text(error).foregroundStyle(HDColor.danger) }
             Button("条件を確認して受諾") { Task { await accept() } }.disabled(busy || staffId.isEmpty || !env.network.isOnline)
-        }.navigationTitle("依頼を受諾").onAppear { staffId = env.session.user?.id ?? "" }
+        }.navigationTitle("依頼を受諾").task {
+            do {
+                let result: MarketplaceList<Member> = try await env.api.client.send(.get("/marketplace/suppliers/\(APIClient.pathComponent(supplierId))/members"))
+                members = result.items
+                staffId = members.first(where: { $0.id == env.session.user?.id })?.id ?? members.first?.id ?? ""
+            } catch { self.error = error.hdUserMessage }
+        }
     }
     private func accept() async {
         guard !busy else { return };busy = true;defer {busy = false}
