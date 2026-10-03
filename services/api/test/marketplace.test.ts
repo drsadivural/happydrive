@@ -83,8 +83,13 @@ describe('v2 marketplace transactional acceptance',()=>{
   });
   it('100 eligible supplier acceptances produce exactly one winner',async()=>{
     const s=await registerCustomer();const id=await posted(s);
-    const candidates=await Promise.all(Array.from({length:100},()=>createSupplier(supplier)));
-    const results=await Promise.allSettled(candidates.map(p=>withTx(env.ctx.db,c=>acceptRequest(c,supplier.userId,id,p.id,supplier.userId))));
+    const candidates=await Promise.all(Array.from({length:100},async()=>{
+      const actor=(await env.ctx.db.query(`INSERT INTO app_users(display_name,email,roles) VALUES ('競合試験',$1,ARRAY['worker']) RETURNING id`,[`race-${randomUUID()}@example.test`])).rows[0].id as string;
+      await env.ctx.db.query(`INSERT INTO marketplace.users(id,family_name,given_name,phone_hash,phone_ciphertext) VALUES ($1,'競合','試験',gen_random_bytes(32),$2)`,[actor,env.ctx.cipher.encrypt('test-only')]);
+      const company=await createSupplier({...supplier,userId:actor});
+      return {...company,actor};
+    }));
+    const results=await Promise.allSettled(candidates.map(p=>withTx(env.ctx.db,c=>acceptRequest(c,p.actor,id,p.id,p.actor))));
     expect(results.filter(r=>r.status==='fulfilled')).toHaveLength(1);
     expect(results.filter(r=>r.status==='rejected').every(r=>r.status==='rejected' && r.reason.statusCode===409)).toBe(true);
     await env.ctx.db.query(`UPDATE marketplace.requests SET status='cancelled' WHERE id=$1`,[id]);
