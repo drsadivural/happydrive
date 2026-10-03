@@ -33,7 +33,7 @@ export async function withIdempotency<T = any>(
     );
     if (ins.rowCount === 0) {
       await c.query('ROLLBACK');
-      return replay<T>(c, actorId, key, requestHash);
+      return replay<T>(ctx, c, actorId, key, requestHash);
     }
     let result: IdemResult<unknown>;
     try {
@@ -50,8 +50,8 @@ export async function withIdempotency<T = any>(
       }
       throw e;
     }
-    await c.query('UPDATE idempotency_keys SET status_code = $3, response_json = $4 WHERE actor_id = $1 AND key = $2', [
-      actorId, key, result.status, JSON.stringify(result.body ?? null),
+    await c.query(`UPDATE idempotency_keys SET status_code = $3, response_json = '{}', response_ciphertext = $4 WHERE actor_id = $1 AND key = $2`, [
+      actorId, key, result.status, ctx.cipher.encryptJson(result.body ?? null),
     ]);
     await c.query('COMMIT');
     return result as IdemResult<T>;
@@ -60,8 +60,8 @@ export async function withIdempotency<T = any>(
   }
 }
 
-async function replay<T>(c: pg.PoolClient, actorId: string, key: string, requestHash: string): Promise<IdemResult<T>> {
-  const r = await c.query('SELECT request_hash, status_code, response_json FROM idempotency_keys WHERE actor_id = $1 AND key = $2', [actorId, key]);
+async function replay<T>(ctx: AppContext, c: pg.PoolClient, actorId: string, key: string, requestHash: string): Promise<IdemResult<T>> {
+  const r = await c.query('SELECT request_hash, status_code, response_json, response_ciphertext FROM idempotency_keys WHERE actor_id = $1 AND key = $2', [actorId, key]);
   const row = r.rows[0];
   if (!row) throw new AppError(409, 'idempotency_in_progress', '同じ操作を処理中です。少し待ってから再度お試しください');
   if (row.request_hash !== requestHash) throw badRequest('idempotency_mismatch', '同じ Idempotency-Key で異なる内容が送信されました');
@@ -69,5 +69,5 @@ async function replay<T>(c: pg.PoolClient, actorId: string, key: string, request
     const b = row.response_json;
     throw new AppError(row.status_code, b.code, b.message, b.details);
   }
-  return { status: row.status_code, body: row.response_json as T };
+  return { status: row.status_code, body: (row.response_ciphertext ? ctx.cipher.decryptJson<T>(row.response_ciphertext) : row.response_json) as T };
 }

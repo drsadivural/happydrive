@@ -5,6 +5,7 @@ import { admin, approvedOrg, call as rawCall, jobInput, publishedJob, setupApp, 
 import { contractValidator, type ContractValidator } from './contract-validator.js';
 import { googleFixture, googleConfig } from './google-fixture.js';
 import { allHandlers } from '../src/server.js';
+import { exerciseOperationsContract } from './marketplace-operations-flow.js';
 import { exerciseMarketplaceContract } from './marketplace-contract-flow.js';
 
 let env: TestEnv;
@@ -166,6 +167,7 @@ describe('contract conformance', () => {
     await call(w, 'POST', '/auth/logout', { refreshToken: w.refresh });
 
     await exerciseMarketplaceContract(env,op);
+    await exerciseOperationsContract(env,op);
     const googleIdentity = google.identity();
     const googleChallenge = await call(null, 'POST', '/auth/google/challenge', {platform:'web'});
     const googleLogin = await call(null, 'POST', '/auth/google/verify', {challengeId:googleChallenge.body.challengeId,idToken:await google.sign(googleChallenge.body.nonce,googleIdentity)});

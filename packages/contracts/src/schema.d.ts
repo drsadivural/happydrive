@@ -2151,7 +2151,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["marketplaceSchedule"];
         put?: never;
         post: operations["marketplaceAvailability"];
         delete?: never;
@@ -2234,6 +2234,214 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["linkPhone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/suppliers/{supplierId}/application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["marketplaceSupplierApplication"];
+        put: operations["marketplaceSubmitApplication"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/suppliers/{supplierId}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["marketplaceInvitations"];
+        put?: never;
+        post: operations["marketplaceInviteStaff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/suppliers/{supplierId}/invitations/{inviteId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["marketplaceRevokeInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/suppliers/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["marketplaceJoinSupplier"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/suppliers/{supplierId}/members/{memberId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["marketplaceDeactivateMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/suppliers/{supplierId}/availability/{availabilityId}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["marketplaceDeleteAvailability"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["marketplaceAdminOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/admin/suppliers/{supplierId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["marketplaceAdminSupplier"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/admin/suppliers/{supplierId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["marketplaceAdminReviewSupplier"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/admin/requests/{requestId}/dispute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["marketplaceAdminDispute"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/admin/requests/{requestId}/resolutions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["marketplaceProposeResolution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/admin/requests/{requestId}/resolutions/{reviewId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["marketplaceApproveResolution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/requests/{requestId}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["marketplaceRating"];
+        put?: never;
+        post: operations["marketplaceRate"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3203,6 +3411,145 @@ export interface components {
                 count: number;
             }[];
             openAppeals?: number;
+        };
+        MarketplaceApplication: {
+            /** Format: uuid */
+            supplierId: string;
+            legalName: string;
+            /** @enum {string} */
+            reviewStatus: "pending" | "approved" | "rejected" | "invited_unverified";
+            address: string;
+            application: {
+                businessCategory: string;
+                registrationNumber?: string;
+                areaCodes: string[];
+                openingHours: string;
+                insuranceSummary: string;
+                /** Format: email */
+                contactEmail: string;
+                description: string;
+            } | null;
+            evidenceIds: string[];
+            reviewReason: string | null;
+        };
+        MarketplaceAdminSupplier: {
+            /** Format: uuid */
+            id: string;
+            legalName: string;
+            /** @enum {string} */
+            reviewStatus: "pending" | "approved" | "rejected" | "invited_unverified";
+            address: string;
+            application: {
+                businessCategory: string;
+                registrationNumber?: string;
+                areaCodes: string[];
+                openingHours: string;
+                insuranceSummary: string;
+                /** Format: email */
+                contactEmail: string;
+                description: string;
+            } | null;
+            evidenceIds: string[];
+        };
+        MarketplaceMutation: {
+            /** Format: uuid */
+            id: string;
+            status: string;
+        };
+        MarketplaceInvitationCreated: {
+            /** Format: uuid */
+            id: string;
+            token: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        MarketplaceInvitations: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                phone: string;
+                /** @enum {string} */
+                role: "staff" | "manager";
+                /** Format: date-time */
+                expiresAt: string;
+                acceptedAt: string | null;
+                revokedAt: string | null;
+            }[];
+        };
+        MarketplaceSchedule: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                staffId: string;
+                staffName: string;
+                /** Format: date-time */
+                startsAt: string;
+                /** Format: date-time */
+                endsAt: string;
+            }[];
+        };
+        MarketplaceDispute: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** @constant */
+            status: "disputed";
+            details: string;
+            address: string;
+            messages: {
+                /** Format: uuid */
+                senderId: string;
+                body: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+        };
+        MarketplaceRating: {
+            rating: {
+                score: number;
+                comment: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            } | null;
+        };
+        MarketplaceAdminOverview: {
+            suppliers: {
+                /** Format: uuid */
+                id: string;
+                legalName: string;
+                reviewStatus: string;
+                supplierType: string;
+                submittedAt: string | null;
+                evidenceIds: string[] | null;
+            }[];
+            services: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                category: string;
+                status: string;
+                supplierName: string;
+                /** Format: uuid */
+                supplierId: string;
+                description: string;
+                pricePolicy: string;
+            }[];
+            disputes: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+                /** @constant */
+                status: "disputed";
+                /** Format: date-time */
+                startsAt: string;
+                supplierId: string | null;
+                reviewId: string | null;
+                proposedBy: string | null;
+                proposedDecision: string | null;
+                reason: string | null;
+                evidenceSummary: string | null;
+            }[];
         };
     };
     responses: {
@@ -7488,6 +7835,29 @@ export interface operations {
             default: components["responses"]["Default"];
         };
     };
+    marketplaceSchedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                supplierId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceSchedule"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
     marketplaceAvailability: {
         parameters: {
             query?: never;
@@ -7691,6 +8061,467 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthResult"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceSupplierApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                supplierId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceApplication"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceSubmitApplication: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                supplierId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    businessCategory: string;
+                    registrationNumber?: string;
+                    areaCodes: string[];
+                    openingHours: string;
+                    insuranceSummary: string;
+                    /** Format: email */
+                    contactEmail: string;
+                    description: string;
+                    evidenceIds: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceMutation"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceInvitations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                supplierId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceInvitations"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceInviteStaff: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                supplierId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    phone: string;
+                    /** @enum {string} */
+                    role: "staff" | "manager";
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceInvitationCreated"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceRevokeInvitation: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                supplierId: string;
+                inviteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceMutation"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceJoinSupplier: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceMutation"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceDeactivateMember: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                supplierId: string;
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceMutation"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceDeleteAvailability: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                supplierId: string;
+                availabilityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceMutation"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceAdminOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAdminOverview"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceAdminSupplier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                supplierId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAdminSupplier"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceAdminReviewSupplier: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                supplierId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "approved" | "rejected";
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceMutation"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceAdminDispute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDispute"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceProposeResolution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "resolved_completed" | "resolved_cancelled";
+                    reason: string;
+                    evidenceSummary: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceMutation"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceApproveResolution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                requestId: string;
+                reviewId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    approve: boolean;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceMutation"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceRating: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceRating"];
+                };
+            };
+            default: components["responses"]["Default"];
+        };
+    };
+    marketplaceRate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    score: number;
+                    comment?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceMutation"];
                 };
             };
             default: components["responses"]["Default"];

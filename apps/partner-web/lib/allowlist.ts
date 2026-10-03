@@ -4,6 +4,18 @@
 import type { AllowRule } from '@happydrive/web-ui/bff/allowlist';
 
 export const PARTNER_API_RULES: readonly AllowRule[] = [
+  { methods: ['GET', 'PUT'], path: '/marketplace/suppliers/{supplierId}/application' },
+  { methods: ['GET', 'POST'], path: '/marketplace/suppliers/{supplierId}/invitations' },
+  { methods: ['POST'], path: '/marketplace/suppliers/{supplierId}/invitations/{inviteId}/revoke' },
+  { methods: ['POST'], path: '/marketplace/suppliers/join' },
+  { methods: ['POST'], path: '/marketplace/suppliers/{supplierId}/members/{memberId}/deactivate' },
+  { methods: ['POST'], path: '/marketplace/suppliers/{supplierId}/availability/{availabilityId}/remove' },
+  { methods: ['GET', 'POST'], path: '/marketplace/requests/{requestId}/rating' },
+  { methods: ['POST'], path: '/evidence/uploads' },
+  { methods: ['POST'], path: '/evidence/{evidenceId}/complete' },
+  { methods: ['GET', 'POST'], path: '/support/tickets' },
+  { methods: ['GET'], path: '/notifications' },
+  { methods: ['POST'], path: '/notifications/read' },
   { methods: ['GET'], path: '/marketplace/plans' },
   { methods: ['GET'], path: '/marketplace/me' },
   { methods: ['PUT'], path: '/marketplace/customer' },
@@ -22,7 +34,7 @@ export const PARTNER_API_RULES: readonly AllowRule[] = [
   { methods: ['POST'], path: '/marketplace/checkout' },
   { methods: ['POST'], path: '/marketplace/suppliers' },
   { methods: ['GET'], path: '/marketplace/suppliers/{supplierId}/members' },
-  { methods: ['POST'], path: '/marketplace/suppliers/{supplierId}/availability' },
+  { methods: ['GET', 'POST'], path: '/marketplace/suppliers/{supplierId}/availability' },
   { methods: ['GET'], path: '/me' },
   { methods: ['GET'], path: '/skills/catalog' },
   { methods: ['POST'], path: '/organizations' },

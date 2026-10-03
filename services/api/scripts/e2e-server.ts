@@ -2,7 +2,7 @@
 import * as OTPAuth from 'otpauth';
 import { createPool } from '../src/db/pool.js';
 import { migrate } from '../src/db/migrate.js';
-import { testConfig, CapturingSms, loginWorker, call } from '../test/helpers.js';
+import { testConfig, CapturingSms, loginWorker, call, jpegWithExif, admin, type Session } from '../test/helpers.js';
 import { googleFixture,googleConfig } from '../test/google-fixture.js';
 import { buildApp } from '../src/server.js';
 
@@ -13,17 +13,19 @@ await db.query('DROP SCHEMA IF EXISTS marketplace CASCADE; DROP SCHEMA public CA
 await migrate(db);await db.end();
 const sms=new CapturingSms();
 const google=await googleFixture();
-const built=await buildApp({cfg:testConfig({databaseUrl,rateLimitPerMinute:10000,google:googleConfig}),sms,googleVerifier:google.verifier});
+const built=await buildApp({cfg:testConfig({databaseUrl,publicBaseUrl:"http://127.0.0.1:8095",corsOrigins:["http://127.0.0.1:3001","http://127.0.0.1:13002"],rateLimitPerMinute:10000,google:googleConfig}),sms,googleVerifier:google.verifier});
 const env={...built,sms,close:()=>built.app.close()};
 const fixtures:Record<string,unknown>={};
+const sessions=new Map<string,Session>();
 const mfaFixtures=new Map<string,OTPAuth.TOTP>();
 env.app.post('/__test/google-token',async(req)=>{const b=req.body as {nonce:string;subject:string};return {token:await google.sign(b.nonce,{sub:b.subject,email:b.subject+'@gmail.com',email_verified:true,name:'Google テスト利用者'})};});
 env.app.get('/__test/mfa/:subject',async(req)=>({code:mfaFixtures.get((req.params as {subject:string}).subject)?.generate()}));
+env.app.get('/__test/document-image',async(_req,reply)=>reply.type('image/jpeg').send(jpegWithExif()));
 env.app.get('/__test/fixtures',async()=>fixtures);
 env.app.get('/__test/otp/:phone',async(req)=>({code:env.sms.codes.get((req.params as {phone:string}).phone)}));
 await env.app.ready();
-for (const [role,phone] of [['customer','09011112222'],['supplier','09033334444'],['customer_mobile','09055556666'],['supplier_mobile','09077778888']] as const) {
-  const s=await loginWorker(env,phone);
+for (const [role,phone] of [['customer','09011112222'],['supplier','09033334444'],['customer_mobile','09055556666'],['supplier_mobile','09077778888'],['supplier_operations','09033335555'],['supplier_operations_mobile','09077779999']] as const) {
+  const s=await loginWorker(env,phone);sessions.set(role,s);
   await call(env,s,'PUT','/marketplace/customer',{familyName:role.startsWith('customer')?'顧客':'供給者',givenName:'テスト',address:'東京都千代田区1-1'});
   fixtures[role]={phone,userId:s.userId};
   if (role.startsWith('customer')) {
@@ -38,8 +40,19 @@ for (const [role,phone] of [['customer','09011112222'],['supplier','09033334444'
     await env.ctx.db.query(`INSERT INTO marketplace.supplier_availability(supplier_id,staff_id,starts_at,ends_at) VALUES ($1,$2,now(),now()+interval '60 days')`,[p.id,s.userId]);
     await env.ctx.db.query(`INSERT INTO marketplace.supplier_services(supplier_id,name,category,description,area_codes,duration_minutes,price_policy,status,source)
       VALUES ($1,'買い物支援','shopping_assist','近所での買い物をお手伝いします',ARRAY['13101'],60,'試験用・請求なし','published','manual')`,[p.id]);
-    fixtures.supplier={phone,userId:s.userId,supplierId:p.id};
+    fixtures[role]={phone,userId:s.userId,supplierId:p.id};
   }
+}
+for(const project of ['desktop','mobile']) {
+  for(const role of ['operator','reviewer']) {const user=await admin(env);fixtures[role+'_'+project]={email:user.email};mfaFixtures.set(user.email,user.totp);}
+  const suffix=project==='mobile'?'_mobile':'';const customer=sessions.get('customer'+suffix)!;const supplier=sessions.get('supplier_operations'+suffix)!;
+  const supplierId=(fixtures['supplier_operations'+suffix] as {supplierId:string}).supplierId;
+  const service=(await env.ctx.db.query('SELECT id FROM marketplace.supplier_services WHERE supplier_id=$1',[supplierId])).rows[0];
+  const request=await call(env,customer,'POST','/marketplace/requests',{serviceId:service.id,title:'ブラウザ紛争確認 '+project,details:'訪問の支援内容を確認してください',address:'東京都千代田区1-1',areaCode:'13101',startsAt:new Date(Date.now()+10*86400000).toISOString(),endsAt:new Date(Date.now()+10*86400000+3600000).toISOString()});
+  if(request.status!==201)throw new Error('Browser dispute fixture creation failed');
+  if((await call(env,supplier,'POST',`/marketplace/requests/${request.body.id}/accept`,{supplierId,staffId:supplier.userId})).status!==200)throw new Error('Browser dispute fixture assignment failed');
+  await call(env,customer,'POST',`/marketplace/requests/${request.body.id}/dispute`,{reason:'支援内容について双方の確認が必要です'});
+  fixtures['dispute_'+project]={id:request.body.id,title:'ブラウザ紛争確認 '+project};
 }
 for(const suffix of ['desktop','mobile']) {
   const subject='browser-google-mfa-'+suffix;const email=subject+'@gmail.com';const secret=new OTPAuth.Secret({size:20});

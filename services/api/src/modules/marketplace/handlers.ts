@@ -10,7 +10,7 @@ async function mutation(ctx: AppContext, req: HdRequest, op: string, fn: Paramet
 }
 const admin = (req: HdRequest) => { if (!requireUser(req).roles.includes('admin_operator')) throw forbidden(); };
 
-async function visibleRequest(ctx: AppContext,req: HdRequest,id: string) {
+export async function visibleRequest(ctx: AppContext,req: HdRequest,id: string) {
   const actor=requireUser(req).id;
   const r=(await ctx.db.query(`SELECT r.*,s.name AS service_name,p.legal_name AS supplier_name FROM marketplace.requests r
     JOIN marketplace.supplier_services s ON s.id=r.service_id LEFT JOIN marketplace.suppliers p ON p.id=r.accepted_supplier_id WHERE r.id=$1`,[id])).rows[0];
@@ -35,7 +35,7 @@ export const marketplaceHandlers: HandlerMap = {
       JOIN marketplace.supplier_members m ON m.supplier_id=s.id WHERE m.user_id=$1 AND m.active`,[actor])).rows;
     const subscription=(await ctx.db.query(`SELECT plan_code AS "planCode",status,trial_ends_at AS "trialEndsAt",current_period_end AS "currentPeriodEnd",cancel_at_period_end AS "cancelAtPeriodEnd"
       FROM marketplace.subscriptions WHERE customer_user_id=$1 ORDER BY last_stripe_sync_at DESC LIMIT 1`,[actor])).rows[0] ?? null;
-    return {profile:profile ? {familyName:profile.family_name,givenName:profile.given_name,email:profile.email,phoneVerified:!!profile.phone_verified_at}:null,roles,suppliers,subscription};
+    return {userId:actor,profile:profile ? {familyName:profile.family_name,givenName:profile.given_name,email:profile.email,phoneVerified:!!profile.phone_verified_at}:null,roles,suppliers,subscription};
   },
   async marketplaceRegisterCustomer(ctx,req,reply) {
     const actor=requireUser(req).id;

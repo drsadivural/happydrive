@@ -1,6 +1,6 @@
 'use client';
 import Script from 'next/script';
-import { useRef, useState } from 'react';
+import { useRef, useState, useSyncExternalStore } from 'react';
 import { postAuth } from '@happydrive/web-ui/client/api';
 import { COOKIE_PREFIX } from '@/lib/config';
 
@@ -8,7 +8,11 @@ type GoogleIdentity = {
   initialize(options:{client_id:string;nonce:string;auto_select:boolean;callback:(data:{credential:string})=>void}):void;
   renderButton(element:HTMLElement,options:{theme:string;size:string;locale:string;text:string}):void;
 };
+const hydrationSubscribe=()=>()=>{};
+const clientReady=()=>true;
+const serverReady=()=>false;
 export function GoogleSignIn({link = false}:{link?:boolean}) {
+  const ready=useSyncExternalStore(hydrationSubscribe,clientReady,serverReady);
   const target=useRef<HTMLDivElement>(null);const [active,setActive]=useState(false);const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [retry,setRetry]=useState(0);
   async function initialize() {
     try {
@@ -25,7 +29,7 @@ export function GoogleSignIn({link = false}:{link?:boolean}) {
     } catch(e) {setError(e instanceof Error?e.message:'Googleログインを読み込めませんでした');}
   }
   return <section aria-label={link?'Googleアカウントの連携':'Googleでログイン'}>
-    {!active && <button type="button" className="hd-button" onClick={()=>setActive(true)}>{link?'Googleアカウントを連携':'Gmail・Googleでログイン'}</button>}
+    {!active && <button type="button" className="hd-button" disabled={!ready} onClick={()=>setActive(true)}>{link?'Googleアカウントを連携':'Gmail・Googleでログイン'}</button>}
     {active && <Script key={retry} src="https://accounts.google.com/gsi/client" onReady={()=>void initialize()} onError={()=>setError('Googleに接続できませんでした。再試行してください。')} />}
     <div ref={target} aria-busy={busy} style={{pointerEvents:busy?'none':undefined}} />
     {busy && <p role="status">確認中…</p>}

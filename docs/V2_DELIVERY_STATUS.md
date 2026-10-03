@@ -8,12 +8,14 @@ This branch is an implementation candidate, **not a production release**. Produc
 
 - Additive PostgreSQL/PostGIS `marketplace` schema beside existing authentication and delivery data. Existing authentication, administration, delivery tools and messaging remain available.
 - SMS customer registration and optional email; existing email/password and MFA login remains available. Browser tokens stay in httpOnly cookies; mutations use CSRF protection and server-side idempotency.
-- Customer/supplier account views and role selection, supplier registration in pending state, services submitted for review, supplier member selection and availability registration.
+- Customer/supplier account views and role selection, supplier registration and encrypted application metadata, uploaded review documents, operator review, services submitted for publication review, phone-bound expiring/revocable staff invitations, role-checked roster deactivation and availability management. Staff views avoid manager-only controls.
 - Customer service catalog, request posting and history, masked supplier feed, tenant-authorized details, encrypted addresses/details/messages, ordered request progress, unaccepted cancellation and quota return, disputes with quota hold, and in-app notifications with existing APNs outbox.
 - Basic 5 and Standard 12 requests per subscription period; Care 2 per scheduled JST day; quota locking including concurrent posts and period-rollover daily counting.
 - Atomic supplier acceptance, required supplier subscription/review, verified qualifications, availability, staff membership and overlapping-request/delivery checks.
 - Customer-only 60-second confirmation tokens, hashed at rest, reissue revocation, assigned-staff verification, expiry/replay protection and exactly-once completion/quota consumption. iOS QR display, expiry countdown, camera permission request and scanner are connected to those endpoints.
-- Native customer/supplier views, service registration, request composition, workflow and messages. Existing delivery tools are reachable from the new home screen.
+- Native customer/supplier views, business registration/application/documents, staff invitations/joining/roster/availability, service registration, request composition, workflow, messages and post-completion ratings. Existing delivery tools, support and account settings are reachable from the new home screen.
+- Operator supplier/service review and dispute workspaces. A dispute proposal requires a different operator to approve or reject it; approval changes the held quota exactly once, while rejection retains the hold. The current resolution records messages and a written evidence summary; it does not perform money movement.
+- Customer post-completion ratings with encrypted comments, customer support tickets and answers, and notification reading. New successful idempotency responses are encrypted, including invitation and completion secrets. Legacy cached rows keep their existing replay format until expiry.
 - Account-deletion blockers include marketplace work/contracts/ownership; completed deletion removes marketplace profile PII and deactivates memberships.
 - Initial company names remain invited and unverified; no partnership claims or published services are seeded for them.
 
@@ -32,8 +34,8 @@ This branch is an implementation candidate, **not a production release**. Produc
 2. Decide supplier pricing; whether customer subscriptions include work; service charges, tax, travel/material charges, supplier compensation, fees, cancellations/refunds and plan-change timing. See `docs/spec/v2/04_BILLING.md`. No guessed prices or live payment attempts are implemented.
 3. Implement and validate Stripe setup/3DS, Billing/Connect, authoritative subscription synchronization, signature-checked ordered/deduplicated webhooks, quotas per real billing period, receipts, transfers, refunds and reconciliation. The current checkout endpoint deliberately returns unavailable.
 4. Connect an actual SMS provider, APNs credentials and production object storage; validate delivery/failure/recovery behavior. SMS provider adapters remain the existing console/none choices.
-5. Complete supplier application metadata/documents, staff invitations/assignment/reassignment, v2 admin review screens, invited-company ownership claims and qualified-service approval.
-6. Complete attachment upload/access/retention for marketplace profiles and requests, ratings, support operations and evidence-backed two-person dispute resolution.
+5. Complete staff reassignment, invited-company ownership claims and qualified-service approval. Supplier applications/documents, staff invitation/assignment and v2 admin review screens are implemented; broad operational/device acceptance remains required.
+6. Complete marketplace profile/request attachment access/retention, linked evidence in dispute review, support escalation and payment outcomes. Ratings, existing support ticket flows and two-person dispute/quota resolution are implemented; request photos and payment resolution remain incomplete.
 7. Implement MCP ownership/TLS/domain/OAuth/SSRF safeguards, read adapters, reviewed synchronization and target-server interoperability tests. Schema tables are present; MCP connectivity is not implemented on this branch.
 8. Integrate the v2 staff schedule with the existing delivery workspace (the current collision check covers v2 delivery records); verify routes/OCR/import constraints against actual travel-time providers.
 9. Complete customer terms/consent, caregiver/delegated booking rules, accessibility/Dynamic Type/VoiceOver, dark-mode and offline/retry reviews, plus broad browser/device acceptance tests.
@@ -71,3 +73,14 @@ The clarified Gmail/Google login requirement is implemented in web and iOS. Conf
 - Browser: 8 connected desktop/mobile tests passed, including Google login, phone linking/profile registration, returning to the same account and Google + TOTP login. External Google UI and SMS remain test adapters.
 - Remote run 37126614344 (8242f1a) passed contracts, API, web, browser, Swift core and full iOS Simulator app build/HappyAvatarKit tests. The follow-up strengthens test coverage and MFA locking and reruns CI. The iOS app source has not changed since the successful build.
 - Security remains blocked by the upstream advisory above. Signed Apple distribution and live provider/device acceptance are still outstanding.
+
+
+## Supplier and administration follow-up (2026-10-03)
+
+Both the web and native iOS clients now include the supplier operating screens described above. Migration 007 is additive. The customer/supplier browser proxy cannot forward the marketplace administrator routes; the admin proxy permits them, and API permissions enforce operator-only writes. Supplier approvals require every submitted document to remain verified, undeleted and unexpired. Invitation tokens are hashed in their table and encrypted in new idempotency replay records.
+
+- API: 98 tests passed in 13 suites; nine focused contract/operational tests also passed after strengthening the documented response schemas. Coverage includes foreign-document rejection, expiring documents, phone-bound invitations, revocation/replay, staff access, encrypted replay secrets, configured upload origins and ten competing independent dispute approvals producing exactly one resolution.
+- Shared web: 75 tests passed; partner web: 28 passed; administrator web: 14 passed.
+- Browser: 14 desktop/mobile Chromium tests passed, including supplier document upload/application persistence, invitation revocation, availability changes, support persistence, supplier/service review and independent dispute approval. SMS, Google, subscriptions and object storage use test adapters; payment effects are not tested here.
+- API and both web production builds, API/web lint and type checks, contract lint and generated contract checks passed. Linux Swift syntax checks passed for the new views; the full updated iOS Simulator compilation is pending remote CI.
+- These checks do not establish production hosting, live providers, physical-device acceptance or complete release readiness.

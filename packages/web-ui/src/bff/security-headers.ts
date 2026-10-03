@@ -29,7 +29,7 @@ export function buildCsp({ isDev, imageOrigins = [], https = !isDev, googleSignI
     `style-src 'self' 'unsafe-inline'${googleSignIn ? ' https://accounts.google.com/gsi/style' : ''}`,
     `img-src ${Array.from(new Set(img)).join(' ')}`,
     "font-src 'self'",
-    `connect-src 'self'${isDev ? ' ws: wss:' : ''}${googleSignIn ? ' https://accounts.google.com/gsi/' : ''}`,
+    `connect-src 'self' ${imageOrigins.filter(Boolean).join(' ')}${isDev ? ' ws: wss:' : ''}${googleSignIn ? ' https://accounts.google.com/gsi/' : ''}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

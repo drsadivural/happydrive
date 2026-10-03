@@ -2044,6 +2044,27 @@ paths:
         default:
           $ref: "#/components/responses/Default"
   /marketplace/suppliers/{supplierId}/availability:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceSchedule
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceSchedule'
+        default:
+          $ref: "#/components/responses/Default"
+
     post:
       tags:
         - Marketplace
@@ -2256,6 +2277,517 @@ paths:
                 $ref: "#/components/schemas/AuthResult"
         default:
           $ref: "#/components/responses/Default"
+
+  /marketplace/suppliers/{supplierId}/application:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceSupplierApplication
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema: &a1
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceApplication'
+        default:
+          $ref: "#/components/responses/Default"
+    put:
+      tags:
+        - Marketplace
+      operationId: marketplaceSubmitApplication
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema: *a1
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceMutation'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                businessCategory:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+                registrationNumber:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+                areaCodes:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+                    maxLength: 20
+                  minItems: 1
+                  maxItems: 100
+                  uniqueItems: true
+                openingHours:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                insuranceSummary:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                contactEmail:
+                  type: string
+                  format: email
+                description:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                evidenceIds:
+                  type: array
+                  items: *a1
+                  uniqueItems: true
+                  maxItems: 20
+                  minItems: 1
+              required:
+                - businessCategory
+                - areaCodes
+                - openingHours
+                - insuranceSummary
+                - contactEmail
+                - description
+                - evidenceIds
+  /marketplace/suppliers/{supplierId}/invitations:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceInvitations
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema: *a1
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceInvitations'
+        default:
+          $ref: "#/components/responses/Default"
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceInviteStaff
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema: *a1
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceInvitationCreated'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                phone:
+                  type: string
+                  pattern: ^(\+81|0)[0-9]{9,10}$
+                role:
+                  type: string
+                  enum:
+                    - staff
+                    - manager
+              required:
+                - phone
+                - role
+  /marketplace/suppliers/{supplierId}/invitations/{inviteId}/revoke:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceRevokeInvitation
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema: *a1
+        - name: inviteId
+          in: path
+          required: true
+          schema: *a1
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceMutation'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties: {}
+              required: []
+  /marketplace/suppliers/join:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceJoinSupplier
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceMutation'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  pattern: ^[A-Za-z0-9_-]{43}$
+              required:
+                - token
+  /marketplace/suppliers/{supplierId}/members/{memberId}/deactivate:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceDeactivateMember
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema: *a1
+        - name: memberId
+          in: path
+          required: true
+          schema: *a1
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceMutation'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason: &a3
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+              required:
+                - reason
+  /marketplace/suppliers/{supplierId}/availability/{availabilityId}/remove:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceDeleteAvailability
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema: *a1
+        - name: availabilityId
+          in: path
+          required: true
+          schema: *a1
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceMutation'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties: {}
+              required: []
+  /marketplace/admin/overview:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceAdminOverview
+      parameters: []
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceAdminOverview'
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/admin/suppliers/{supplierId}:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceAdminSupplier
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema: *a1
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceAdminSupplier'
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/admin/suppliers/{supplierId}/review:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceAdminReviewSupplier
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          schema: *a1
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceMutation'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                decision:
+                  type: string
+                  enum:
+                    - approved
+                    - rejected
+                reason: *a3
+              required:
+                - decision
+                - reason
+  /marketplace/admin/requests/{requestId}/dispute:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceAdminDispute
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: *a1
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceDispute'
+        default:
+          $ref: "#/components/responses/Default"
+  /marketplace/admin/requests/{requestId}/resolutions:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceProposeResolution
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: *a1
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceMutation'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                decision:
+                  type: string
+                  enum:
+                    - resolved_completed
+                    - resolved_cancelled
+                reason: *a3
+                evidenceSummary:
+                  type: string
+                  minLength: 20
+                  maxLength: 4000
+              required:
+                - decision
+                - reason
+                - evidenceSummary
+  /marketplace/admin/requests/{requestId}/resolutions/{reviewId}/approve:
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceApproveResolution
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: *a1
+        - name: reviewId
+          in: path
+          required: true
+          schema: *a1
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceMutation'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                approve:
+                  type: boolean
+                reason: *a3
+              required:
+                - approve
+                - reason
+  /marketplace/requests/{requestId}/rating:
+    get:
+      tags:
+        - Marketplace
+      operationId: marketplaceRating
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: *a1
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceRating'
+        default:
+          $ref: "#/components/responses/Default"
+    post:
+      tags:
+        - Marketplace
+      operationId: marketplaceRate
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: *a1
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceMutation'
+        default:
+          $ref: "#/components/responses/Default"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                score:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+                  minLength: 0
+                  maxLength: 1000
+              required:
+                - score
 
 components:
   securitySchemes:
@@ -2936,3 +3468,428 @@ components:
         acceptRate: {type: number}
         exclusionReasons: {type: array, items: {type: object, required: [reason, count], properties: {reason: {type: string}, count: {type: integer}}}}
         openAppeals: {type: integer}
+
+    MarketplaceApplication:
+      type: object
+      additionalProperties: false
+      properties:
+        supplierId:
+          type: string
+          format: uuid
+        legalName:
+          type: string
+        reviewStatus:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+            - invited_unverified
+        address:
+          type: string
+        application:
+          anyOf:
+            - type: object
+              additionalProperties: false
+              properties:
+                businessCategory:
+                  type: string
+                registrationNumber:
+                  type: string
+                areaCodes:
+                  type: array
+                  items:
+                    type: string
+                openingHours:
+                  type: string
+                insuranceSummary:
+                  type: string
+                contactEmail:
+                  type: string
+                  format: email
+                description:
+                  type: string
+              required:
+                - businessCategory
+                - areaCodes
+                - openingHours
+                - insuranceSummary
+                - contactEmail
+                - description
+            - type: "null"
+        evidenceIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        reviewReason:
+          anyOf:
+            - type: string
+            - type: "null"
+      required:
+        - supplierId
+        - legalName
+        - reviewStatus
+        - address
+        - application
+        - evidenceIds
+        - reviewReason
+    MarketplaceAdminSupplier:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        legalName:
+          type: string
+        reviewStatus:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+            - invited_unverified
+        address:
+          type: string
+        application:
+          anyOf:
+            - type: object
+              additionalProperties: false
+              properties:
+                businessCategory:
+                  type: string
+                registrationNumber:
+                  type: string
+                areaCodes:
+                  type: array
+                  items:
+                    type: string
+                openingHours:
+                  type: string
+                insuranceSummary:
+                  type: string
+                contactEmail:
+                  type: string
+                  format: email
+                description:
+                  type: string
+              required:
+                - businessCategory
+                - areaCodes
+                - openingHours
+                - insuranceSummary
+                - contactEmail
+                - description
+            - type: "null"
+        evidenceIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - id
+        - legalName
+        - reviewStatus
+        - address
+        - application
+        - evidenceIds
+    MarketplaceMutation:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+      required:
+        - id
+        - status
+    MarketplaceInvitationCreated:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{43}$
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - token
+        - expiresAt
+    MarketplaceInvitations:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              id:
+                type: string
+                format: uuid
+              phone:
+                type: string
+              role:
+                type: string
+                enum:
+                  - staff
+                  - manager
+              expiresAt:
+                type: string
+                format: date-time
+              acceptedAt:
+                anyOf:
+                  - type: string
+                    format: date-time
+                  - type: "null"
+              revokedAt:
+                anyOf:
+                  - type: string
+                    format: date-time
+                  - type: "null"
+            required:
+              - id
+              - phone
+              - role
+              - expiresAt
+              - acceptedAt
+              - revokedAt
+      required:
+        - items
+    MarketplaceSchedule:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              id:
+                type: string
+                format: uuid
+              staffId:
+                type: string
+                format: uuid
+              staffName:
+                type: string
+              startsAt:
+                type: string
+                format: date-time
+              endsAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - staffId
+              - staffName
+              - startsAt
+              - endsAt
+      required:
+        - items
+    MarketplaceDispute:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          const: disputed
+        details:
+          type: string
+        address:
+          type: string
+        messages:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              senderId:
+                type: string
+                format: uuid
+              body:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - senderId
+              - body
+              - createdAt
+      required:
+        - id
+        - title
+        - status
+        - details
+        - address
+        - messages
+    MarketplaceRating:
+      type: object
+      additionalProperties: false
+      properties:
+        rating:
+          anyOf:
+            - type: object
+              additionalProperties: false
+              properties:
+                score:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                createdAt:
+                  type: string
+                  format: date-time
+              required:
+                - score
+                - comment
+                - createdAt
+            - type: "null"
+      required:
+        - rating
+    MarketplaceAdminOverview:
+      type: object
+      additionalProperties: false
+      properties:
+        suppliers:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              id:
+                type: string
+                format: uuid
+              legalName:
+                type: string
+              reviewStatus:
+                type: string
+              supplierType:
+                type: string
+              submittedAt:
+                anyOf:
+                  - type: string
+                    format: date-time
+                  - type: "null"
+              evidenceIds:
+                anyOf:
+                  - type: array
+                    items:
+                      type: string
+                      format: uuid
+                  - type: "null"
+            required:
+              - id
+              - legalName
+              - reviewStatus
+              - supplierType
+              - submittedAt
+              - evidenceIds
+        services:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              category:
+                type: string
+              status:
+                type: string
+              supplierName:
+                type: string
+              supplierId:
+                type: string
+                format: uuid
+              description:
+                type: string
+              pricePolicy:
+                type: string
+            required:
+              - id
+              - name
+              - category
+              - status
+              - supplierName
+              - supplierId
+              - description
+              - pricePolicy
+        disputes:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              id:
+                type: string
+                format: uuid
+              title:
+                type: string
+              status:
+                const: disputed
+              startsAt:
+                type: string
+                format: date-time
+              supplierId:
+                anyOf:
+                  - type: string
+                    format: uuid
+                  - type: "null"
+              reviewId:
+                anyOf:
+                  - type: string
+                    format: uuid
+                  - type: "null"
+              proposedBy:
+                anyOf:
+                  - type: string
+                    format: uuid
+                  - type: "null"
+              proposedDecision:
+                anyOf:
+                  - type: string
+                  - type: "null"
+              reason:
+                anyOf:
+                  - type: string
+                  - type: "null"
+              evidenceSummary:
+                anyOf:
+                  - type: string
+                  - type: "null"
+            required:
+              - id
+              - title
+              - status
+              - startsAt
+              - supplierId
+              - reviewId
+              - proposedBy
+              - proposedDecision
+              - reason
+              - evidenceSummary
+      required:
+        - suppliers
+        - services
+        - disputes

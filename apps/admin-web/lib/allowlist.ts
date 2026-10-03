@@ -4,6 +4,13 @@
 import type { AllowRule } from '@happydrive/web-ui/bff/allowlist';
 
 export const ADMIN_API_RULES: readonly AllowRule[] = [
+  { methods: ['GET'], path: '/marketplace/admin/overview' },
+  { methods: ['GET'], path: '/marketplace/admin/suppliers/{supplierId}' },
+  { methods: ['POST'], path: '/marketplace/admin/suppliers/{supplierId}/review' },
+  { methods: ['POST'], path: '/marketplace/services/{serviceId}/review' },
+  { methods: ['GET'], path: '/marketplace/admin/requests/{requestId}/dispute' },
+  { methods: ['POST'], path: '/marketplace/admin/requests/{requestId}/resolutions' },
+  { methods: ['POST'], path: '/marketplace/admin/requests/{requestId}/resolutions/{reviewId}/approve' },
   { methods: ['GET'], path: '/me' },
   { methods: ['GET'], path: '/skills/catalog' },
   { methods: ['GET'], path: '/admin/users' },

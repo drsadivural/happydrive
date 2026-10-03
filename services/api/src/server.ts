@@ -30,6 +30,7 @@ import { learningHandlers } from './modules/learning.js';
 import { organizationHandlers } from './modules/organizations.js';
 import { adminHandlers } from './modules/admin.js';
 import { voiceHandlers } from './modules/voice/handlers.js';
+import { marketplaceOperations } from './modules/marketplace/operations.js';
 import { marketplaceHandlers } from './modules/marketplace/handlers.js';
 
 export interface BuildOptions {
@@ -81,6 +82,7 @@ export const allHandlers: HandlerMap = {
   ...adminHandlers,
   ...voiceHandlers,
   ...marketplaceHandlers,
+  ...marketplaceOperations,
 };
 
 /** Strips query strings (may carry coordinates) and signed tokens from logged URLs. */
@@ -123,7 +125,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<{ app: FastifyI
   };
 
   await app.register(helmet, { contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'same-site' } });
-  await app.register(cors, { origin: cfg.corsOrigins, credentials: false, allowedHeaders: ['authorization', 'content-type', 'idempotency-key', 'x-request-id'] });
+  await app.register(cors, { origin: cfg.corsOrigins, credentials: false, methods: ['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['authorization', 'content-type', 'idempotency-key', 'x-request-id'] });
   const redis = cfg.redisUrl ? new Redis(cfg.redisUrl, { lazyConnect: false, maxRetriesPerRequest: 1, enableOfflineQueue: false }) : undefined;
   await app.register(rateLimit, {
     global: true,

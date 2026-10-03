@@ -115,6 +115,7 @@ struct MarketplaceRequestView: View {
                 }
                 if request.status == "open", request.customerId == env.session.user?.id { Button("依頼をキャンセル",role:.destructive) { reasonAction = "cancel";showReason = true } }
                 if ["accepted","en_route","arrived","in_progress","awaiting_customer_confirmation"].contains(request.status ?? "") { Button("サポートに相談") { reasonAction = "dispute";showReason = true } }
+                if ["completed","resolved_completed"].contains(request.status ?? "") { MarketplaceRatingView(requestId:requestId,canRate:request.customerId == env.session.user?.id) }
                 Section("メッセージ") {
                     ForEach(messages) { item in VStack(alignment:.leading) { Text(item.body);Text(HDFormat.dateTime(item.createdAt)).font(.caption).foregroundStyle(.secondary) } }
                     TextField("メッセージ",text:$message,axis:.vertical)

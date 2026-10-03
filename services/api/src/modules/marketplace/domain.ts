@@ -17,7 +17,7 @@ export type RequestInput = {
 };
 
 export async function member(c: pg.PoolClient | pg.Pool, actorId: string, supplierId: string, manage = false) {
-  const r = await c.query(`SELECT role FROM marketplace.supplier_members WHERE supplier_id=$1 AND user_id=$2 AND active`, [supplierId, actorId]);
+  const r = await c.query(`SELECT role FROM marketplace.supplier_members WHERE supplier_id=$1 AND user_id=$2 AND active FOR SHARE`, [supplierId, actorId]);
   if (!r.rows[0] || (manage && !['owner', 'manager'].includes(r.rows[0].role))) throw forbidden();
   return r.rows[0];
 }
@@ -60,10 +60,10 @@ export async function reserveRequest(ctx: AppContext, c: pg.PoolClient, actorId:
 }
 
 export async function acceptRequest(c: pg.PoolClient, actorId: string, requestId: string, supplierId: string, staffId: string) {
+  // Staff changes and assignments share this lock before checking current membership.
+  await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [`staff:${staffId}`]);
   await member(c, actorId, supplierId, true);
   await member(c, staffId, supplierId);
-  // All staff assignments lock the same row, preventing overlapping acceptances of different requests.
-  await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [`staff:${staffId}`]);
   const r = (await c.query(`SELECT r.*,s.category,s.required_qualifications,s.duration_minutes,s.area_codes FROM marketplace.requests r
     JOIN marketplace.supplier_services s ON s.id=r.service_id WHERE r.id=$1 FOR UPDATE OF r`, [requestId])).rows[0];
   if (!r) throw notFound();

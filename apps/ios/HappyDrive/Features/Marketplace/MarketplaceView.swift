@@ -77,19 +77,20 @@ struct MarketplaceRootView: View {
                         Section("募集中の依頼") {
                             if feed.isEmpty { Text("対応可能な依頼はありません。") }
                             ForEach(feed) { request in
-                                NavigationLink { MarketplaceAcceptView(request: request, supplierId: supplierId).environment(env) } label: {
+                                if account?.suppliers.first(where: { $0.id == supplierId })?.role != "staff" { NavigationLink { MarketplaceAcceptView(request: request, supplierId: supplierId).environment(env) } label: {
                                     VStack(alignment: .leading) { Text(request.title).font(.headline); Text(request.areaCode); Text(HDFormat.dateTime(request.startsAt)) }
-                                }
+                                } } else { Text(request.title) }
                             }
                         }
                         Section("登録サービス") {
                             ForEach(services) { service in VStack(alignment: .leading) { Text(service.name); Text(service.status == "published" ? "公開中" : "審査中").foregroundStyle(.secondary) } }
-                            if !supplierId.isEmpty { NavigationLink("サービスを登録") { MarketplaceServiceForm(supplierId: supplierId).environment(env) } }
+                            if !supplierId.isEmpty, account?.suppliers.first(where: { $0.id == supplierId })?.role != "staff" { NavigationLink("サービスを登録") { MarketplaceServiceForm(supplierId: supplierId).environment(env) } }
                         }
                     }
                 }
                 if section == "requests" { Section("依頼履歴") { if requests.isEmpty { Text("依頼はまだありません。") }; ForEach(requests) { request in requestLink(request) } } }
                 if section == "account" {
+                    if mode == "supplier", let supplier = account?.suppliers.first(where: { $0.id == supplierId }) { Section { NavigationLink("申請・担当者・対応予定") { SupplierOperationsView(supplierId:supplier.id,role:supplier.role) } } }
                     Section("プロフィール") {
                         GoogleSignInButton(link: true)
                         if let profile = account?.profile { Text("\(profile.familyName) \(profile.givenName)") }
@@ -109,6 +110,9 @@ struct MarketplaceRootView: View {
                         if let sub = account?.subscription { Text("契約: \(sub.planCode)"); if let end = sub.trialEndsAt { Text("無料期間終了: \(HDFormat.dateTime(end))") } }
                     }
                     Section {
+                        NavigationLink("お問い合わせ・サポート") { SupportView() }
+                        NavigationLink("供給者の招待を受けた方") { SupplierJoinView() }
+                        if account?.profile != nil { NavigationLink("新しい事業者を登録") { SupplierRegistrationView() } }
                         NavigationLink("アカウント設定・退会") { AccountSettingsView() }
                         Button("配送・企業の機能を開く") { showDelivery = true }
                     }
