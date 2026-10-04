@@ -22,12 +22,23 @@
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>HDAPIBaseURL</key>
 	<string>$(API_BASE_URL)</string>
 	<key>HDAPNsEnvironment</key>
 	<string>$(HD_APNS_ENVIRONMENT)</string>
+	<key>HDGoogleClientID</key>
+	<string>$(GOOGLE_IOS_CLIENT_ID)</string>
 	<key>HDPrivacyURL</key>
 	<string>$(HD_PRIVACY_URL)</string>
 	<key>HDPrivacyVersion</key>

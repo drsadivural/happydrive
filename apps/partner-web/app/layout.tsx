@@ -11,8 +11,8 @@ const noto = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: { default: 'HappyDrive 企業・自治体ポータル', template: '%s | HappyDrive 企業ポータル' },
-  description: 'HappyDrive の発注企業・自治体向けポータル',
+  title: { default: 'HappyDrive 暮らしの支援', template: '%s | HappyDrive' },
+  description: '訪問・配送・生活支援の依頼と供給者の業務をつなぐ HappyDrive',
   robots: { index: false, follow: false },
 };
 

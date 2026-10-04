@@ -36,11 +36,11 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
   };
 }
 
-export async function setupApp(overrides: Partial<Config> = {}): Promise<TestEnv> {
+export async function setupApp(overrides: Partial<Config> = {}, googleVerifier?: import("../src/auth/google.js").GoogleVerifier): Promise<TestEnv> {
   const cv = await contractValidator();
   setResponseValidator(cv.validate);
   const sms = new CapturingSms();
-  const { app, ctx } = await buildApp({ cfg: testConfig(overrides), sms });
+  const { app, ctx } = await buildApp({ cfg: testConfig(overrides), sms, googleVerifier });
   await app.ready();
   return { app, ctx, sms, close: () => app.close() };
 }

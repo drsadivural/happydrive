@@ -7,6 +7,7 @@ import { AdminProvider, useAdmin } from '@/lib/admin-context';
 import { COOKIE_PREFIX } from '@/lib/config';
 
 const NAV: NavItem[] = [
+  { href: '/marketplace', label: '暮らしの支援' },
   { href: '/dashboard', label: 'ダッシュボード' },
   { href: '/users', label: '利用者審査' },
   { href: '/organizations', label: '組織審査' },

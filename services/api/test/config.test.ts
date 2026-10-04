@@ -15,6 +15,10 @@ const prod = (extra: Record<string, string> = {}) => {
 };
 
 describe('production configuration fails closed', () => {
+  it('allows public previews to disable commercial requests independently of adapter setup', () => {
+    expect(prod({ PUBLIC_PREVIEW: 'true' }).publicPreview).toBe(true);
+    expect(prod({ PUBLIC_PREVIEW: 'false' }).publicPreview).toBe(false);
+  });
   it('starts with real adapters and disables SMS/payouts until contracted', () => {
     const c = prod();
     expect(c.sms.provider).toBe('none');

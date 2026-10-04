@@ -5,6 +5,7 @@
  */
 export interface SecurityHeaderOptions {
   isDev: boolean;
+  googleSignIn?: boolean;
   /** 証跡画像の署名URLの配信元（例 API のオリジン、S3 互換ストレージのオリジン） */
   imageOrigins?: readonly string[];
   /** HTTPS 運用時のみ upgrade-insecure-requests / HSTS を付ける（既定: !isDev） */
@@ -20,20 +21,20 @@ export function originOf(url: string | undefined | null): string | null {
   }
 }
 
-export function buildCsp({ isDev, imageOrigins = [], https = !isDev }: SecurityHeaderOptions): string {
+export function buildCsp({ isDev, imageOrigins = [], https = !isDev, googleSignIn = false }: SecurityHeaderOptions): string {
   const img = ["'self'", 'data:', 'blob:', ...imageOrigins.filter(Boolean)];
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
-    "style-src 'self' 'unsafe-inline'",
+    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}${googleSignIn ? ' https://accounts.google.com/gsi/client' : ''}`,
+    `style-src 'self' 'unsafe-inline'${googleSignIn ? ' https://accounts.google.com/gsi/style' : ''}`,
     `img-src ${Array.from(new Set(img)).join(' ')}`,
     "font-src 'self'",
-    `connect-src 'self'${isDev ? ' ws: wss:' : ''}`,
+    `connect-src 'self' ${imageOrigins.filter(Boolean).join(' ')}${isDev ? ' ws: wss:' : ''}${googleSignIn ? ' https://accounts.google.com/gsi/' : ''}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "frame-src 'none'",
+    `frame-src ${googleSignIn ? 'https://accounts.google.com/gsi/' : "'none'"}`,
     "worker-src 'self' blob:",
     "manifest-src 'self'",
   ];
@@ -44,11 +45,11 @@ export function buildCsp({ isDev, imageOrigins = [], https = !isDev }: SecurityH
 export function securityHeaders(options: SecurityHeaderOptions): { key: string; value: string }[] {
   const headers = [
     { key: 'Content-Security-Policy', value: buildCsp(options) },
-    { key: 'Referrer-Policy', value: 'same-origin' },
+    { key: 'Referrer-Policy', value: options.googleSignIn ? (options.isDev ? 'no-referrer-when-downgrade' : 'strict-origin-when-cross-origin') : 'same-origin' },
     { key: 'X-Frame-Options', value: 'DENY' },
     { key: 'X-Content-Type-Options', value: 'nosniff' },
     { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()' },
-    { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+    { key: 'Cross-Origin-Opener-Policy', value: options.googleSignIn ? 'same-origin-allow-popups' : 'same-origin' },
   ];
   if (options.https ?? !options.isDev) headers.push({ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' });
   return headers;

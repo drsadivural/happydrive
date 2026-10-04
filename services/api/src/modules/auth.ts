@@ -33,6 +33,36 @@ function totpFor(secretBase32: string, label: string) {
   return new OTPAuth.TOTP({ issuer: 'HappyDrive', label, algorithm: 'SHA1', digits: 6, period: 30, secret: OTPAuth.Secret.fromBase32(secretBase32) });
 }
 
+async function verifyPhoneProof(ctx: AppContext, phone: string, code: string) {
+  const phoneHash = ctx.cipher.blindIndex(phone);
+  const isReview = !!ctx.cfg.reviewAccount && normalizePhone(ctx.cfg.reviewAccount.phone) === phone;
+  if (isReview) {
+    if (!safeEqual(code, ctx.cfg.reviewAccount!.code)) throw unauthorized('確認コードが正しくありません', 'otp_invalid');
+  } else {
+    const ok = await withTx(ctx.db, async (c) => {
+    const r = await c.query(
+      `SELECT id, code_hash, attempts, expires_at FROM otp_challenges
+       WHERE phone_hash = $1 AND consumed_at IS NULL ORDER BY created_at DESC LIMIT 1 FOR UPDATE`,
+      [phoneHash],
+    );
+    const ch = r.rows[0];
+    if (!ch) return 'missing';
+    if (ch.expires_at < new Date()) return 'expired';
+    if (ch.attempts >= OTP_MAX_ATTEMPTS) return 'locked';
+    if (!safeEqual(ch.code_hash, codeHash(ctx, phoneHash, code))) {
+      await c.query('UPDATE otp_challenges SET attempts = attempts + 1 WHERE id = $1', [ch.id]);
+      return 'invalid';
+    }
+    await c.query('UPDATE otp_challenges SET consumed_at = now() WHERE id = $1', [ch.id]);
+    return 'ok';
+    });
+    if (ok === 'expired' || ok === 'missing') throw unauthorized('確認コードの有効期限が切れました。再送信してください', 'otp_expired');
+    if (ok === 'locked') throw tooMany('入力回数の上限に達しました。確認コードを再送信してください');
+    if (ok === 'invalid') throw unauthorized('確認コードが正しくありません', 'otp_invalid');
+  }
+
+}
+
 export const authHandlers: HandlerMap = {
   async requestOtp(ctx, req, reply) {
     const phone = normalizePhone(body<{ phone: string }>(req).phone);
@@ -79,40 +109,19 @@ export const authHandlers: HandlerMap = {
     const phone = normalizePhone(b.phone);
     const phoneHash = ctx.cipher.blindIndex(phone);
 
-    const isReview = !!ctx.cfg.reviewAccount && normalizePhone(ctx.cfg.reviewAccount.phone) === phone;
-    if (isReview) {
-      if (!safeEqual(b.code, ctx.cfg.reviewAccount!.code)) throw unauthorized('確認コードが正しくありません', 'otp_invalid');
-    } else {
-      const ok = await withTx(ctx.db, async (c) => {
-        const r = await c.query(
-          `SELECT id, code_hash, attempts, expires_at FROM otp_challenges
-           WHERE phone_hash = $1 AND consumed_at IS NULL ORDER BY created_at DESC LIMIT 1 FOR UPDATE`,
-          [phoneHash],
-        );
-        const ch = r.rows[0];
-        if (!ch) return 'missing';
-        if (ch.expires_at < new Date()) return 'expired';
-        if (ch.attempts >= OTP_MAX_ATTEMPTS) return 'locked';
-        if (!safeEqual(ch.code_hash, codeHash(ctx, phoneHash, b.code))) {
-          await c.query('UPDATE otp_challenges SET attempts = attempts + 1 WHERE id = $1', [ch.id]);
-          return 'invalid';
-        }
-        await c.query('UPDATE otp_challenges SET consumed_at = now() WHERE id = $1', [ch.id]);
-        return 'ok';
-      });
-      if (ok === 'expired' || ok === 'missing') throw unauthorized('確認コードの有効期限が切れました。再送信してください', 'otp_expired');
-      if (ok === 'locked') throw tooMany('入力回数の上限に達しました。確認コードを再送信してください');
-      if (ok === 'invalid') throw unauthorized('確認コードが正しくありません', 'otp_invalid');
-    }
+    await verifyPhoneProof(ctx, phone, b.code);
 
     return withTx(ctx.db, async (c) => {
       const tomb = await c.query(`SELECT 1 FROM deleted_identities WHERE phone_hash = $1 AND deleted_at > now() - interval '30 days'`, [phoneHash]);
       if (tomb.rowCount) throw forbidden('この電話番号のアカウントは退会済みです。再登録はサポートへお問い合わせください', 'account_deleted');
-      const existing = await c.query('SELECT id, roles FROM app_users WHERE phone_hash = $1', [phoneHash]);
+      const existing = await c.query('SELECT id, roles, mfa_enabled, suspended_at, deleted_at FROM app_users WHERE phone_hash = $1', [phoneHash]);
       let userId: string;
       let isNewUser = false;
       if (existing.rows[0]) {
-        userId = existing.rows[0].id;
+        const account = existing.rows[0];
+        if (account.deleted_at || account.suspended_at) throw forbidden('このアカウントは利用できません', 'account_unavailable');
+        if (account.mfa_enabled || account.roles.some((role:string)=>role.startsWith('admin_'))) throw forbidden('メールアドレスと多要素認証でログインしてください', 'mfa_required');
+        userId = account.id;
         if (!existing.rows[0].roles.includes('worker')) {
           await c.query(`UPDATE app_users SET roles = array_append(roles, 'worker') WHERE id = $1`, [userId]);
         }
@@ -128,6 +137,27 @@ export const authHandlers: HandlerMap = {
       }
       const tokens = await issueTokens(ctx, c, userId, b.deviceName);
       return { tokens, user: await loadMe(ctx, userId, c), isNewUser };
+    });
+  },
+
+  async linkPhone(ctx, req) {
+    const user = requireUser(req);
+    const b = body<{ phone: string; code: string; deviceName?: string }>(req);
+    const phone = normalizePhone(b.phone);
+    await verifyPhoneProof(ctx, phone, b.code);
+    const hash = ctx.cipher.blindIndex(phone);
+    return withTx(ctx.db, async c => {
+      await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [hash.toString('hex')]);
+      const tomb = await c.query(`SELECT 1 FROM deleted_identities WHERE phone_hash=$1 AND deleted_at>now()-interval '30 days'`, [hash]);
+      if (tomb.rowCount) throw forbidden('退会済みの電話番号です', 'account_deleted');
+      const owner = (await c.query('SELECT id FROM app_users WHERE phone_hash=$1', [hash])).rows[0];
+      if (owner && owner.id !== user.id) throw conflict('phone_already_linked', 'この電話番号は別のアカウントで登録済みです。既存の方法でログインしてください');
+      const current = (await c.query('SELECT phone_hash,deleted_at,suspended_at FROM app_users WHERE id=$1 FOR UPDATE', [user.id])).rows[0];
+      if (!current || current.deleted_at || current.suspended_at) throw forbidden('このアカウントは利用できません', 'account_unavailable');
+      if (current.phone_hash && !safeEqual(current.phone_hash,hash)) throw conflict('phone_already_linked', '別の電話番号が登録済みです。変更はサポートへお問い合わせください');
+      await c.query('UPDATE app_users SET phone_hash=$2,phone_ciphertext=$3 WHERE id=$1', [user.id,hash,ctx.cipher.encrypt(phone)]);
+      await recordEvent(c, { entityType:'user',entityId:user.id,eventType:'phone_linked',actor:{id:user.id,role:'self'} });
+      return { tokens: await issueTokens(ctx,c,user.id,b.deviceName), user:await loadMe(ctx,user.id,c), isNewUser:false };
     });
   },
 
@@ -214,22 +244,27 @@ export const authHandlers: HandlerMap = {
     const userId = await verifyMfaToken(ctx, b.mfaToken);
     const key = `mfa:${userId}`;
     if ((await countAttempts(ctx, key, WEB_LOGIN_WINDOW_MIN)) >= WEB_LOGIN_MAX_FAILS) throw tooMany('認証コードの入力回数が上限に達しました。15分後にお試しください');
-    return withTx(ctx.db, async (c) => {
-      const r = await c.query('SELECT email, totp_secret_ciphertext, last_totp_step, mfa_enabled, deleted_at FROM app_users WHERE id = $1 FOR UPDATE', [userId]);
+    const result = await withTx(ctx.db, async (c) => {
+      const r = await c.query('SELECT email, totp_secret_ciphertext, last_totp_step, mfa_enabled, deleted_at, suspended_at FROM app_users WHERE id = $1 FOR UPDATE', [userId]);
       const u = r.rows[0];
       if (!u || u.deleted_at || !u.totp_secret_ciphertext) throw unauthorized();
+      if (u.suspended_at) throw forbidden('アカウントは停止されています', 'account_suspended');
+      const attempts = await c.query(`SELECT count(*)::int AS n FROM auth_attempts WHERE key=$1 AND created_at>now()-make_interval(mins=>$2)`, [key,WEB_LOGIN_WINDOW_MIN]);
+      if (attempts.rows[0].n >= WEB_LOGIN_MAX_FAILS) throw tooMany('認証コードの入力回数が上限に達しました。15分後にお試しください');
       const totp = totpFor(ctx.cipher.decrypt(u.totp_secret_ciphertext), u.email);
       const delta = totp.validate({ token: b.code, window: 1 });
       const step = Math.floor(Date.now() / 30_000) + (delta ?? 0);
       if (delta === null || (u.last_totp_step !== null && step <= Number(u.last_totp_step))) {
-        await ctx.db.query('INSERT INTO auth_attempts(key) VALUES ($1)', [key]);
-        throw new AppError(401, 'mfa_invalid', '認証コードが正しくありません');
+        await c.query('INSERT INTO auth_attempts(key) VALUES ($1)', [key]);
+        return null;
       }
       await c.query('UPDATE app_users SET last_totp_step = $2, mfa_enabled = true WHERE id = $1', [userId, step]);
       if (!u.mfa_enabled) await recordEvent(c, { entityType: 'user', entityId: userId, eventType: 'mfa_enrolled', actor: { id: userId, role: 'web' } });
       const tokens = await issueTokens(ctx, c, userId, 'web');
       return { tokens, user: await loadMe(ctx, userId, c), isNewUser: false };
     });
+    if (!result) throw new AppError(401, 'mfa_invalid', '認証コードが正しくありません');
+    return result;
   },
 };
 

@@ -1,0 +1,66 @@
+// Test-only HTTP harness; refuses any database whose name does not end in _e2e.
+import * as OTPAuth from 'otpauth';
+import { createPool } from '../src/db/pool.js';
+import { migrate } from '../src/db/migrate.js';
+import { testConfig, CapturingSms, loginWorker, call, jpegWithExif, admin, type Session } from '../test/helpers.js';
+import { googleFixture,googleConfig } from '../test/google-fixture.js';
+import { buildApp } from '../src/server.js';
+
+const databaseUrl=process.env.HD_E2E_DATABASE_URL;
+if (process.env.NODE_ENV!=='test' || !databaseUrl || !new URL(databaseUrl).pathname.endsWith('_e2e')) throw new Error('NODE_ENV=test and an explicit *_e2e database are required');
+const db=createPool(databaseUrl);
+await db.query('DROP SCHEMA IF EXISTS marketplace CASCADE; DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
+await migrate(db);await db.end();
+const sms=new CapturingSms();
+const google=await googleFixture();
+const built=await buildApp({cfg:testConfig({databaseUrl,publicBaseUrl:"http://127.0.0.1:8095",corsOrigins:["http://127.0.0.1:3001","http://127.0.0.1:13002"],rateLimitPerMinute:10000,google:googleConfig}),sms,googleVerifier:google.verifier});
+const env={...built,sms,close:()=>built.app.close()};
+const fixtures:Record<string,unknown>={};
+const sessions=new Map<string,Session>();
+const mfaFixtures=new Map<string,OTPAuth.TOTP>();
+env.app.post('/__test/google-token',async(req)=>{const b=req.body as {nonce:string;subject:string};return {token:await google.sign(b.nonce,{sub:b.subject,email:b.subject+'@gmail.com',email_verified:true,name:'Google テスト利用者'})};});
+env.app.get('/__test/mfa/:subject',async(req)=>({code:mfaFixtures.get((req.params as {subject:string}).subject)?.generate()}));
+env.app.get('/__test/document-image',async(_req,reply)=>reply.type('image/jpeg').send(jpegWithExif()));
+env.app.get('/__test/fixtures',async()=>fixtures);
+env.app.get('/__test/otp/:phone',async(req)=>({code:env.sms.codes.get((req.params as {phone:string}).phone)}));
+await env.app.ready();
+for (const [role,phone] of [['customer','09011112222'],['supplier','09033334444'],['customer_mobile','09055556666'],['supplier_mobile','09077778888'],['supplier_operations','09033335555'],['supplier_operations_mobile','09077779999']] as const) {
+  const s=await loginWorker(env,phone);sessions.set(role,s);
+  await call(env,s,'PUT','/marketplace/customer',{familyName:role.startsWith('customer')?'顧客':'供給者',givenName:'テスト',address:'東京都千代田区1-1'});
+  fixtures[role]={phone,userId:s.userId};
+  if (role.startsWith('customer')) {
+    const sub=(await env.ctx.db.query(`INSERT INTO marketplace.subscriptions(customer_user_id,stripe_customer_id,stripe_subscription_id,stripe_price_id,plan_code,status,trial_ends_at,current_period_start,current_period_end)
+      VALUES ($1,'e2e_customer_'||$2,'e2e_subscription_'||$2,'e2e_price','basic','trialing',now()+interval '30 days',now(),now()+interval '30 days') RETURNING id`,[s.userId,phone])).rows[0];
+    await env.ctx.db.query(`INSERT INTO marketplace.quota_periods(subscription_id,starts_at,ends_at,plan_code,period_limit) VALUES ($1,now(),now()+interval '30 days','basic',5)`,[sub.id]);
+  } else {
+    const p=(await env.ctx.db.query(`INSERT INTO marketplace.suppliers(legal_name,supplier_type,review_status) VALUES ($1,'company','approved') RETURNING id`,['試験用生活サポート'+phone])).rows[0];
+    await env.ctx.db.query(`INSERT INTO marketplace.supplier_members(supplier_id,user_id,role) VALUES ($1,$2,'owner')`,[p.id,s.userId]);
+    await env.ctx.db.query(`INSERT INTO marketplace.subscriptions(supplier_id,stripe_customer_id,stripe_subscription_id,stripe_price_id,plan_code,status,trial_ends_at,current_period_end)
+      VALUES ($1,'e2e_supplier_'||$2,'e2e_supplier_sub_'||$2,'e2e_supplier_price','supplier','trialing',now()+interval '7 days',now()+interval '7 days')`,[p.id,phone]);
+    await env.ctx.db.query(`INSERT INTO marketplace.supplier_availability(supplier_id,staff_id,starts_at,ends_at) VALUES ($1,$2,now(),now()+interval '60 days')`,[p.id,s.userId]);
+    await env.ctx.db.query(`INSERT INTO marketplace.supplier_services(supplier_id,name,category,description,area_codes,duration_minutes,price_policy,status,source)
+      VALUES ($1,'買い物支援','shopping_assist','近所での買い物をお手伝いします',ARRAY['13101'],60,'試験用・請求なし','published','manual')`,[p.id]);
+    fixtures[role]={phone,userId:s.userId,supplierId:p.id};
+  }
+}
+for(const project of ['desktop','mobile']) {
+  for(const role of ['operator','reviewer']) {const user=await admin(env);fixtures[role+'_'+project]={email:user.email};mfaFixtures.set(user.email,user.totp);}
+  const suffix=project==='mobile'?'_mobile':'';const customer=sessions.get('customer'+suffix)!;const supplier=sessions.get('supplier_operations'+suffix)!;
+  const supplierId=(fixtures['supplier_operations'+suffix] as {supplierId:string}).supplierId;
+  const service=(await env.ctx.db.query('SELECT id FROM marketplace.supplier_services WHERE supplier_id=$1',[supplierId])).rows[0];
+  const request=await call(env,customer,'POST','/marketplace/requests',{serviceId:service.id,title:'ブラウザ紛争確認 '+project,details:'訪問の支援内容を確認してください',address:'東京都千代田区1-1',areaCode:'13101',startsAt:new Date(Date.now()+10*86400000).toISOString(),endsAt:new Date(Date.now()+10*86400000+3600000).toISOString()});
+  if(request.status!==201)throw new Error('Browser dispute fixture creation failed');
+  if((await call(env,supplier,'POST',`/marketplace/requests/${request.body.id}/accept`,{supplierId,staffId:supplier.userId})).status!==200)throw new Error('Browser dispute fixture assignment failed');
+  await call(env,customer,'POST',`/marketplace/requests/${request.body.id}/dispute`,{reason:'支援内容について双方の確認が必要です'});
+  fixtures['dispute_'+project]={id:request.body.id,title:'ブラウザ紛争確認 '+project};
+}
+for(const suffix of ['desktop','mobile']) {
+  const subject='browser-google-mfa-'+suffix;const email=subject+'@gmail.com';const secret=new OTPAuth.Secret({size:20});
+  const user=(await env.ctx.db.query(`INSERT INTO app_users(display_name,email,totp_secret_ciphertext,mfa_enabled,roles) VALUES ('Google MFA テスト',$1,$2,true,'{worker}') RETURNING id`,[email,env.ctx.cipher.encrypt(secret.base32)])).rows[0];
+  await env.ctx.db.query('INSERT INTO google_identities(subject_hash,user_id) VALUES ($1,$2)',[env.ctx.cipher.blindIndex('google:'+subject),user.id]);
+  mfaFixtures.set(subject,new OTPAuth.TOTP({issuer:'HappyDrive',label:email,secret}));
+}
+await env.ctx.db.query('DELETE FROM otp_challenges');
+
+await env.app.listen({host:'127.0.0.1',port:8095});
+for (const signal of ['SIGINT','SIGTERM']) process.on(signal,()=>{void env.close().then(()=>process.exit(0));});

@@ -1,3 +1,4 @@
+import { verifyGoogleToken } from './auth/google.js';
 import pino from 'pino';
 import { loadConfig } from './config.js';
 import { createPool } from './db/pool.js';
@@ -13,7 +14,9 @@ const cfg = loadConfig();
 const log = pino({ level: cfg.logLevel });
 const db = createPool(cfg.databaseUrl, 5);
 const ctx: AppContext = {
-  cfg, db, cipher: new FieldCipher(cfg.dataEncryptionKey, cfg.dataHmacKey), storage: createStorage(cfg),
+  cfg,
+  googleVerifier: verifyGoogleToken,
+  db, cipher: new FieldCipher(cfg.dataEncryptionKey, cfg.dataHmacKey), storage: createStorage(cfg),
   sms: createSms(cfg, log as any), payouts: createPayouts(cfg, db), log: log as any,
 };
 const apns = new ApnsClient(cfg.apns);

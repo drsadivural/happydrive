@@ -3,13 +3,18 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { admin, approvedOrg, call as rawCall, jobInput, publishedJob, setupApp, uploadEvidence, verifiedWorker, type Session, type TestEnv } from './helpers.js';
 import { contractValidator, type ContractValidator } from './contract-validator.js';
+import { googleFixture, googleConfig } from './google-fixture.js';
 import { allHandlers } from '../src/server.js';
+import { exerciseOperationsContract } from './marketplace-operations-flow.js';
+import { exerciseMarketplaceContract } from './marketplace-contract-flow.js';
 
 let env: TestEnv;
 let cv: ContractValidator;
+let google: Awaited<ReturnType<typeof googleFixture>>;
 
 beforeAll(async () => {
-  env = await setupApp();
+  google = await googleFixture();
+  env = await setupApp({google:googleConfig},google.verifier);
   cv = await contractValidator();
 });
 afterAll(async () => env.close());
@@ -160,6 +165,19 @@ describe('contract conformance', () => {
     await call(op, 'POST', `/admin/organizations/${org.orgId}/review`, { decision: 'approved', reason: '再確認' });
     await call(org.owner, 'DELETE', `/organizations/${org.orgId}/sites/${site.body.id}`);
     await call(w, 'POST', '/auth/logout', { refreshToken: w.refresh });
+
+    await exerciseMarketplaceContract(env,op);
+    await exerciseOperationsContract(env,op);
+    const googleIdentity = google.identity();
+    const googleChallenge = await call(null, 'POST', '/auth/google/challenge', {platform:'web'});
+    const googleLogin = await call(null, 'POST', '/auth/google/verify', {challengeId:googleChallenge.body.challengeId,idToken:await google.sign(googleChallenge.body.nonce,googleIdentity)});
+    expect(googleLogin.status).toBe(200);
+    const linking = await call(k, 'POST', '/auth/google/link/challenge', {platform:'ios'});
+    expect((await call(k,'POST','/auth/google/link',{challengeId:linking.body.challengeId,idToken:await google.sign(linking.body.nonce,google.identity(),googleConfig.iosClientId)})).status).toBe(200);
+    const phone = '090'+String(Math.floor(Math.random()*1e8)).padStart(8,'0');
+    await call(null,'POST','/auth/otp/request',{phone});
+    const googleSession = {token:googleLogin.body.tokens.accessToken,refresh:googleLogin.body.tokens.refreshToken,userId:googleLogin.body.user.id,headers:{authorization:`Bearer ${googleLogin.body.tokens.accessToken}`}};
+    expect((await call(googleSession,'POST','/auth/phone/link',{phone,code:env.sms.codes.get('+81'+phone.slice(1))})).status).toBe(200);
 
     const all = Object.values<any>(cv.spec.paths).flatMap((item) => ['get', 'post', 'put', 'patch', 'delete'].filter((m) => item[m]).map((m) => item[m].operationId));
     const notExercised = all.filter((o) => !cv.seen.has(o)).sort();

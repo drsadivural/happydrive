@@ -30,6 +30,29 @@ public struct HappyDriveAPI: Sendable {
         return result
     }
 
+    public func googleChallenge(link: Bool = false) async throws -> GoogleAuthChallenge {
+        try await client.send(try .json(.post, link ? "/auth/google/link/challenge" : "/auth/google/challenge", body: ["platform":"ios"], requiresAuth: link))
+    }
+    public func googleSignIn(challengeId: String, idToken: String, deviceName: String?, link: Bool = false) async throws -> GoogleSignInResult {
+        struct Input: Encodable { let challengeId: String; let idToken: String; let deviceName: String? }
+        let endpoint: Endpoint<AuthResult> = try .json(.post, link ? "/auth/google/link" : "/auth/google/verify", body: Input(challengeId: challengeId, idToken: idToken, deviceName: deviceName), requiresAuth: link)
+        let response = try await client.perform(method: endpoint.method, path: endpoint.path, body: endpoint.body, idempotencyKey: nil, requiresAuth: link)
+        if response.status == 202 { return .mfa(try client.decode(GoogleMFAChallenge.self, from: response)) }
+        let result = try client.decode(AuthResult.self, from: response)
+        try client.tokenStore.saveTokens(result.tokens)
+        return .authenticated(result)
+    }
+    public func verifyGoogleMFA(challenge: GoogleMFAChallenge, code: String) async throws -> AuthResult {
+        let result: AuthResult = try await client.send(try .json(.post, "/auth/web/mfa/verify", body: ["mfaToken":challenge.mfaToken,"code":code], requiresAuth: false))
+        try client.tokenStore.saveTokens(result.tokens)
+        return result
+    }
+    public func linkPhone(phone: String, code: String, deviceName: String?) async throws -> AuthResult {
+        let result: AuthResult = try await client.send(try .json(.post, "/auth/phone/link", body: OTPVerifyBody(phone: phone, code: code, deviceName: deviceName)))
+        try client.tokenStore.saveTokens(result.tokens)
+        return result
+    }
+
     /// サーバー側のリフレッシュトークンを失効させ、端末のトークンを消去する（通信失敗でも端末側は消去）。
     public func logout() async {
         if let refresh = client.tokenStore.loadTokens()?.refreshToken {

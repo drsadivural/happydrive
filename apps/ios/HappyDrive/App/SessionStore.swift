@@ -59,7 +59,7 @@ final class SessionStore {
 
     func bootstrap() async {
         guard api.client.isLoggedIn else {
-            await signInWithDevice()
+            phase = .signedOut
             return
         }
         phase = .signedIn
@@ -108,12 +108,12 @@ final class SessionStore {
         self.user = user
     }
 
-    /// トークンが失効したら同じ端末アカウントで自動的にサインインし直す
+    /// 顧客・供給者のセッション切れでは本人の電話番号による再認証を要求する。
     func handleSessionExpired() {
         guard phase == .signedIn else { return }
         user = nil
-        phase = .launching
-        Task { await signInWithDevice() }
+        sessionExpiredNotice = "ログインの有効期限が切れました。もう一度ログインしてください。"
+        phase = .signedOut
     }
 
     func markSignedOut() {

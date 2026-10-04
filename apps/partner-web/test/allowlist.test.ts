@@ -18,6 +18,14 @@ describe('企業ポータルの BFF 許可リスト', () => {
     expect(isAllowed(rules, 'GET', `/evidence/${ID}/url`)).toBe(true);
     expect(isAllowed(rules, 'POST', '/reports')).toBe(true);
   });
+  it('暮らしの支援の書類提出と運用を許可し、運営操作を分離する', () => {
+    expect(isAllowed(rules, 'POST', '/evidence/uploads')).toBe(true);
+    expect(isAllowed(rules, 'POST', `/evidence/${ID}/complete`)).toBe(true);
+    expect(isAllowed(rules, 'PUT', `/marketplace/suppliers/${ID}/application`)).toBe(true);
+    expect(isAllowed(rules, 'POST', `/marketplace/suppliers/${ID}/invitations`)).toBe(true);
+    expect(isAllowed(rules, 'GET', '/marketplace/admin/overview')).toBe(false);
+    expect(isAllowed(rules, 'POST', `/marketplace/admin/suppliers/${ID}/review`)).toBe(false);
+  });
   it('運営 API（/admin/*）は一切中継しない', () => {
     for (const m of ['GET', 'POST', 'PUT', 'DELETE']) {
       expect(isAllowed(rules, m, '/admin/users')).toBe(false);
@@ -35,6 +43,6 @@ describe('企業ポータルの BFF 許可リスト', () => {
     expect(isAllowed(rules, 'POST', `/assignments/${ID}/location`)).toBe(false);
     expect(isAllowed(rules, 'DELETE', `/organizations/${ORG}`)).toBe(false);
     expect(isAllowed(rules, 'GET', '/delivery/stops')).toBe(false);
-    expect(isAllowed(rules, 'POST', '/evidence/uploads')).toBe(false);
+    expect(isAllowed(rules, 'DELETE', `/evidence/${ID}`)).toBe(false);
   });
 });

@@ -7,6 +7,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: ['127.0.0.1'],
   poweredByHeader: false,
   transpilePackages: ['@happydrive/web-ui', '@happydrive/contracts', '@happydrive/design-tokens'],
   turbopack: { root: path.resolve(__dirname, '../..') },
@@ -15,7 +16,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/:path*',
-        headers: securityHeaders({ isDev, https: !isDev && resolveSecure(), imageOrigins: imageOriginsFromEnv() }),
+        headers: securityHeaders({ googleSignIn: true, isDev, https: !isDev && resolveSecure(), imageOrigins: imageOriginsFromEnv() }),
       },
     ];
   },

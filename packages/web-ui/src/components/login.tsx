@@ -35,18 +35,19 @@ export interface LoginFlowProps {
   signupHref?: string;
   loginHref?: string;
   notice?: string;
+  initialMfa?: boolean;
 }
 
 /**
  * メール + パスワード → TOTP（初回は QR 登録）。トークンは BFF が httpOnly Cookie に保存し、この画面には渡らない。
  */
-export function LoginFlow({ cookiePrefix, appName, mode, defaultNext, signupHref, loginHref, notice }: LoginFlowProps) {
-  const [step, setStep] = useState<'credentials' | 'mfa'>('credentials');
+export function LoginFlow({ cookiePrefix, appName, mode, defaultNext, signupHref, loginHref, notice, initialMfa = false }: LoginFlowProps) {
+  const [step, setStep] = useState<'credentials' | 'mfa'>(initialMfa ? 'mfa' : 'credentials');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [code, setCode] = useState('');
-  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [challenge, setChallenge] = useState<Challenge | null>(initialMfa ? {mfaEnrollmentRequired:false,totpUri:null} : null);
   const [qr, setQr] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);

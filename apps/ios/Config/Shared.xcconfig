@@ -19,3 +19,8 @@ HD_TERMS_URL = https:/$()/happydrive.jp/terms
 HD_PRIVACY_URL = http:/$()/www.happydrive.jp/privacy.php
 HD_SUPPORT_URL = https:/$()/happydrive.jp/support
 CODE_SIGN_ENTITLEMENTS = HappyDrive/Supporting/HappyDrive.entitlements
+
+// Google Cloud iOS OAuth client registered for PRODUCT_BUNDLE_IDENTIFIER.
+// Set both values in the private build configuration; no client secret is used.
+GOOGLE_IOS_CLIENT_ID =
+GOOGLE_REVERSED_CLIENT_ID =

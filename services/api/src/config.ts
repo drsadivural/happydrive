@@ -5,6 +5,7 @@ export type Env = 'development' | 'test' | 'production' | 'staging';
 
 export interface Config {
   env: Env;
+  publicPreview: boolean;
   port: number;
   publicBaseUrl: string;
   databaseUrl: string;
@@ -20,6 +21,7 @@ export interface Config {
   trustProxy: boolean | number | string;
   rateLimitPerMinute: number;
   sms: { provider: 'console' | 'none' };
+  google?: { webClientId?: string; iosClientId?: string };
   reviewAccount?: { phone: string; code: string };
   storage:
     | { provider: 'local'; dir: string; signingKey: Buffer }
@@ -152,6 +154,7 @@ export function loadConfig(): Config {
 
   return {
     env,
+    publicPreview: process.env.PUBLIC_PREVIEW === 'true',
     port: Number(process.env.PORT ?? 8080),
     publicBaseUrl: process.env.PUBLIC_BASE_URL ?? `http://localhost:${process.env.PORT ?? 8080}`,
     databaseUrl: req('DATABASE_URL', hardened ? undefined : 'postgresql://happydrive:happydrive@localhost:5433/happydrive'),
@@ -167,6 +170,7 @@ export function loadConfig(): Config {
     corsOrigins: (process.env.CORS_ORIGINS ?? 'http://localhost:3001,http://localhost:3002').split(',').filter(Boolean),
     sms: { provider: smsProvider },
     reviewAccount,
+    google: { webClientId: process.env.GOOGLE_WEB_CLIENT_ID || undefined, iosClientId: process.env.GOOGLE_IOS_CLIENT_ID || undefined },
     storage,
     payouts: {
       provider: payoutProvider,

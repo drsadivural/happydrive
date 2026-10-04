@@ -18,12 +18,16 @@ export function AppShell({
   nav,
   sidebarFooter,
   contextBar,
+  activeHref,
+  onNavSelect,
   children,
 }: {
   brandSub: string;
   nav: readonly NavItem[];
   sidebarFooter?: ReactNode;
   contextBar?: ReactNode;
+  activeHref?: string;
+  onNavSelect?: (href: string) => void;
   children: ReactNode;
 }) {
   const pathname = usePathname() ?? '/';
@@ -58,7 +62,13 @@ export function AppShell({
         </Link>
         <nav className="hd-nav">
           {nav.map((item) => (
-            <Link key={item.href} href={item.href} aria-current={isNavActive(pathname, item.href) ? 'page' : undefined}>
+            <Link key={item.href} href={item.href} onClick={(event) => {
+              if (onNavSelect && item.href.startsWith('#')) {
+                event.preventDefault();
+                onNavSelect(item.href);
+                setMenuOpen(false);
+              }
+            }} aria-current={(activeHref ? activeHref === item.href : isNavActive(pathname, item.href)) ? 'page' : undefined}>
               {item.label}
             </Link>
           ))}

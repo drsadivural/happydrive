@@ -24,6 +24,10 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>HDGoogleClientID</key>
+	<string>$(GOOGLE_IOS_CLIENT_ID)</string>
+	<key>CFBundleURLTypes</key>
+	<array><dict><key>CFBundleURLSchemes</key><array><string>$(GOOGLE_REVERSED_CLIENT_ID)</string></array></dict></array>
 	<key>HDAPIBaseURL</key>
 	<string>$(API_BASE_URL)</string>
 	<key>HDAPNsEnvironment</key>
