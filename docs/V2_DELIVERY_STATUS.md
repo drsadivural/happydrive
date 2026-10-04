@@ -39,7 +39,7 @@ This branch is an implementation candidate, **not a production release**. Produc
 7. Implement MCP ownership/TLS/domain/OAuth/SSRF safeguards, read adapters, reviewed synchronization and target-server interoperability tests. Schema tables are present; MCP connectivity is not implemented on this branch.
 8. Integrate the v2 staff schedule with the existing delivery workspace (the current collision check covers v2 delivery records); verify routes/OCR/import constraints against actual travel-time providers.
 9. Complete customer terms/consent, caregiver/delegated booking rules, accessibility/Dynamic Type/VoiceOver, dark-mode and offline/retry reviews, plus broad browser/device acceptance tests.
-10. Confirm the hosting project and DNS control for `happydrive.ayonix.com`. DNS resolution failed from this machine during inspection. The saved deployment configuration describes only `happydrive-api.ayonix.com`; no production web deployment was performed.
+10. The customer/supplier web preview is now published at `https://happydrive.ayonix.com` through the existing HappyDrive Cloudflare tunnel. DNS, TLS, desktop/mobile page loading and API health were verified on 2026-10-04. Complete provider configuration and release acceptance before enabling customer operations. See `docs/WEB_HOSTING.md`.
 11. Configure Apple signing/developer access, run an archive, test on at least two physical devices, perform face-to-face QR trials, distribute through TestFlight and complete review accounts/privacy declarations.
 12. Verify operations monitoring, alerts, backup restore drills and release runbooks. Complete the P0 evidence matrix in `docs/spec/v2/ACCEPTANCE.md` before enabling launch.
 
@@ -86,3 +86,12 @@ Both the web and native iOS clients now include the supplier operating screens d
 - These checks do not establish production hosting, live providers, physical-device acceptance or complete release readiness.
 
 Customer completion QR display is also available in the web request detail, with expiry and reissue. It uses the same payload and authorization as iOS; suppliers scan it with the iOS app. Web lint and production compilation were checked. Request attachment integration is still outstanding.
+
+
+## Public domain availability (2026-10-04)
+
+The previously missing DNS record and web route were created, and the customer/supplier application is available at `https://happydrive.ayonix.com`. The current API was deployed with additive migrations 005–007 and existing secrets/accounts retained. The original checkout's deleted files were left untouched. Both processes listen on loopback behind Cloudflare. Services restart automatically and are enabled at boot. A database dump and previous service/environment/tunnel files were backed up before deployment.
+
+The API uses its existing development adapter setup as a public preview, with `PUBLIC_PREVIEW=true` explicitly blocking marketplace request creation even in development. Checkout also remains unavailable. This does not relax production/staging adapter restrictions. Google OAuth and SMS are not configured: the live Google challenge returns `503 google_unconfigured`. The page is available; customer login and paid service operation are not ready.
+
+Live validation: Google and Cloudflare public DNS resolvers return the domain; HTTPS redirects to the customer login and returns 200; desktop Chromium records no page exceptions; mobile Chromium shows the login without horizontal overflow; the API health check returns `status:ok`. The web production build and API build/lint pass. The pre-gate full API run passed 99 tests; 17 focused marketplace/configuration tests passed after adding the public-preview gate.

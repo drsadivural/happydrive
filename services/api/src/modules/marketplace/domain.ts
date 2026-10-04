@@ -27,7 +27,7 @@ async function event(c: pg.PoolClient, actorId: string, id: string, eventType: s
 }
 
 export async function reserveRequest(ctx: AppContext, c: pg.PoolClient, actorId: string, b: RequestInput) {
-  if (ctx.cfg.env !== 'test' && ctx.cfg.env !== 'development') throw unavailable('commercial_decision_pending', '料金・契約条件の承認後に依頼受付を開始します');
+  if (ctx.cfg.publicPreview || (ctx.cfg.env !== 'test' && ctx.cfg.env !== 'development')) throw unavailable('commercial_decision_pending', '料金・契約条件の承認後に依頼受付を開始します');
   if (Date.parse(b.startsAt) <= Date.now() || Date.parse(b.endsAt) <= Date.parse(b.startsAt)) throw badRequest('invalid_schedule', '希望日時を確認してください');
   const profile = await c.query(`SELECT 1 FROM marketplace.user_roles WHERE user_id=$1 AND role='customer'`, [actorId]);
   if (!profile.rowCount) throw forbidden('顧客登録を完了してください');

@@ -1,0 +1,17 @@
+[Unit]
+Description=HappyDrive customer and supplier web application
+After=network-online.target happydrive-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/happydrive-runtime/current/apps/partner-web
+EnvironmentFile=/etc/happydrive/web.env
+ExecStart=/usr/local/bin/node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 13001
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

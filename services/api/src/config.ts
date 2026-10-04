@@ -5,6 +5,7 @@ export type Env = 'development' | 'test' | 'production' | 'staging';
 
 export interface Config {
   env: Env;
+  publicPreview: boolean;
   port: number;
   publicBaseUrl: string;
   databaseUrl: string;
@@ -153,6 +154,7 @@ export function loadConfig(): Config {
 
   return {
     env,
+    publicPreview: process.env.PUBLIC_PREVIEW === 'true',
     port: Number(process.env.PORT ?? 8080),
     publicBaseUrl: process.env.PUBLIC_BASE_URL ?? `http://localhost:${process.env.PORT ?? 8080}`,
     databaseUrl: req('DATABASE_URL', hardened ? undefined : 'postgresql://happydrive:happydrive@localhost:5433/happydrive'),

@@ -125,6 +125,14 @@ describe('v2 marketplace transactional acceptance',()=>{
     expect((await call(env,customer,'GET',`/marketplace/requests/${id}`)).body.status).toBe('awaiting_customer_confirmation');
     expect((await call(env,customer,'POST',`/marketplace/requests/${id}/dispute`,{reason:'作業内容を確認したい'})).status).toBe(200);
   });
+  it('refuses request creation in public preview without changing quota',async()=>{
+    const original=env.ctx.cfg.publicPreview;env.ctx.cfg.publicPreview=true;
+    try {
+      const response=await call(env,customer,'POST','/marketplace/requests',{serviceId,title:'プレビュー受付',details:'試験用依頼',address:'東京都千代田区1-1',areaCode:'13101',startsAt,endsAt});
+      expect(response.status).toBe(503);expect(response.body.code).toBe('commercial_decision_pending');
+      expect((await env.ctx.db.query("SELECT 1 FROM marketplace.requests WHERE title='プレビュー受付'")).rowCount).toBe(0);
+    } finally {env.ctx.cfg.publicPreview=original;}
+  });
   it('refuses checkout until commercial terms are decided',async()=>{
     expect((await call(env,customer,'POST','/marketplace/checkout',{planCode:'basic'})).status).toBe(503);
   });
